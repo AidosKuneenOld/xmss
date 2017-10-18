@@ -41,7 +41,7 @@ are required to compile.
 	}
 ```
 
-##Performance
+## Performance
 
 XMSS-SHA2_16_256 benchmark Using the following test environment...
 
@@ -52,14 +52,15 @@ XMSS-SHA2_16_256 benchmark Using the following test environment...
 * Memory: 8 GB
 ```
 
-```
-BenchmarkXMSS16-2       	       1	54495501572 ns/op
-BenchmarkXMSS16Sign-2   	     200	   7239790 ns/op
-BenchmarkXMSS16Veri-2   	    2000	    677960 ns/op
-```
 
 It takes 
 
 * about 55 seconds to generating a keypair,
 * about 7.2 mS to sign a message,
 * about 680 uS to verify a signature.
+
+```
+BenchmarkXMSS16-2       	       1	54495501572 ns/op
+BenchmarkXMSS16Sign-2   	     200	   7239790 ns/op
+BenchmarkXMSS16Veri-2   	    2000	    677960 ns/op
+```
