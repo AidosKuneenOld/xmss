@@ -32,12 +32,12 @@ are required to compile.
 ## Usage
 
 ```go
-    import "github.com/AidosKuneen/xmss"
+	import "github.com/AidosKuneen/xmss"
 	seed := xmss.GenerateSeed()
 	mer := xmss.NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
-    sig := mer.Sign(msg)
-    pub:=mer.PublicKey()
+	sig := mer.Sign(msg)
+	pub:=mer.PublicKey()
 	if !xmss.Verify(sig, msg, pub) {
 		log.Println("signature is invalid")
 	}
