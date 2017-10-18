@@ -23,14 +23,12 @@ package xmss
 import (
 	"crypto/rand"
 	"encoding/binary"
-	mrand "math/rand"
 
 	sha256 "github.com/AidosKuneen/sha256-simd"
 )
 
 var (
 	zero64 = make([]byte, 64)
-	cmrand *mrand.Rand
 )
 
 const (

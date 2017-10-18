@@ -22,6 +22,7 @@ package xmss
 
 import (
 	"runtime"
+	"sync"
 	"unsafe"
 )
 
@@ -63,27 +64,20 @@ func chain(x []byte, start, step byte, p *prf, addrs addr, out []byte) {
 	}
 }
 
-// func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
-// 	var i uint32
-// 	var wg sync.WaitGroup
-// 	for i = 0; i < wlen; i++ {
-// 		wg.Add(1)
-// 		go func(i uint32) {
-// 			a := make(addr, 32)
-// 			copy(a, addrs)
-// 			a.set(adrChain, i)
-// 			chain(priv[i], 0, w-1, p, a, pubkey[i])
-// 			wg.Done()
-// 		}(i)
-// 	}
-// 	wg.Wait()
-// }
 func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
 	var i uint32
+	var wg sync.WaitGroup
 	for i = 0; i < wlen; i++ {
-		addrs.set(adrChain, i)
-		chain(priv[i], 0, w-1, p, addrs, pubkey[i])
+		wg.Add(1)
+		go func(i uint32) {
+			a := make(addr, 32)
+			copy(a, addrs)
+			a.set(adrChain, i)
+			chain(priv[i], 0, w-1, p, a, pubkey[i])
+			wg.Done()
+		}(i)
 	}
+	wg.Wait()
 }
 
 const (

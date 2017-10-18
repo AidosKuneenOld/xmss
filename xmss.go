@@ -169,8 +169,7 @@ func Verify(bsig, msg, bpk []byte) bool {
 	pkOTS := sig.sig.pubkey(hmsg, pk.prf, addrs)
 	addrs.set(adrType, 1)
 	addrs.set(adrLtree, sig.idx)
-	var node0 []byte
-	node0 = pkOTS.ltree(pk.prf, addrs)
+	node0 := pkOTS.ltree(pk.prf, addrs)
 	addrs.set(adrType, 2)
 	addrs.set(adrLtree, 0)
 	var k uint32

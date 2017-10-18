@@ -3,6 +3,63 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/AidosKuneen/xmss/master/LICENSE)
 
 
-XMSS (the eXtended Merkle Signature Scheme )
+XMSS (eXtended Merkle Signature Scheme)
 =====
 
+## Overview
+
+This library is for creating keys, signing messages and verifing the signature by XMSS in golang.
+
+This code implements XMSS-SHA2_10_256, 
+XMSS-SHA2_16_256, XMSS-SHA2_20_26 described on IRTF draft [XMSS: Extended Hash-Based Signatures](https://datatracker.ietf.org/doc/draft-irtf-cfrg-xmss-hash-based-signatures/) and 
+compatible with [XMSS reference code](https://github.com/joostrijneveld/xmss-reference).
+But this code is much faster than the reference code by using [SSE extention](https://github.com/minio/sha256-simd) and block level optimizations in sha256,
+with multi threadings.
+
+
+## Requirements
+
+* git
+* go 1.9+
+
+are required to compile.
+
+
+## Install
+    $ go get github.com/AidosKuneen/xmss
+
+
+## Usage
+
+```go
+	seed := GenerateSeed()
+	mer := NewMerkle(10, seed)
+	msg := []byte("This is a test for XMSS.")
+	sig := mer.Sign(msg)
+	if !Verify(sig, msg, mer.priv.root) {
+		log.Println("signature is invalid")
+	}
+```
+
+##Performance
+
+XMSS-SHA2_16_256 benchmark Using the following test environment...
+
+```
+* Compiler: go version go1.9.1 linux/amd64
+* Kernel: Linux WS777 4.13.5-1-ARCH #1 SMP PREEMPT Fri Oct 6 09:58:47 CEST 2017 x86_64 GNU/Linux
+* CPU:  Celeron(R) CPU G1840 @ 2.80GHz 
+* Memory: 8 GB
+```
+
+```
+BenchmarkXMSS16-2       	       1	54495501572 ns/op
+BenchmarkXMSS16Sign-2   	     200	   7239790 ns/op
+BenchmarkXMSS16Veri-2   	    2000	    677960 ns/op
+```
+
+It takes 
+
+* about 55 seconds to generating a keypair,
+* about 7.2 mS to sign a message,
+* about 680 uS to verify a signature.
