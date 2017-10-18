@@ -1,0 +1,130 @@
+// Copyright (c) 2017 Aidos Developer
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+package xmss
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"testing"
+)
+
+func TestBase16(t *testing.T) {
+	out := make([]uint8, 4)
+	base16([]byte{0x12, 0x34}, out)
+	if !bytes.Equal(out, []uint8{1, 2, 3, 4}) {
+		t.Error("base16 is incorrect for 4")
+		t.Log(out)
+	}
+	base16([]byte{0x12, 0x34}, out[:3])
+	if !bytes.Equal(out[:3], []uint8{1, 2, 3}) {
+		t.Error("base16 is incorrect for 3")
+		t.Log(out)
+	}
+	base16([]byte{0x12, 0x34}, out[:2])
+	if !bytes.Equal(out[:2], []uint8{1, 2}) {
+		t.Error("base16 is incorrect for 2")
+		t.Log(out)
+	}
+}
+func TestWOTS(t *testing.T) {
+	pseed := GenerateSeed()
+	prfP := newPRF(pseed)
+	priv := make(wotsPrivKey, wlen)
+	pub := make(wotsPubKey, wlen)
+	for i := range priv {
+		pub[i] = make([]byte, 32)
+		priv[i] = make([]byte, 32)
+		prfP.sumInt(uint32(i), priv[i])
+	}
+	seed := GenerateSeed()
+	prf := newPRF(seed)
+	priv.newWotsPubKey(prf, make([]byte, 32), pub)
+	msg := []byte("This is a test for wots.")
+	hmsg := sha256.Sum256(msg)
+	sign := priv.sign(hmsg[:], prf, make([]byte, 32))
+	pub2 := sign.pubkey(hmsg[:], prf, make([]byte, 32))
+	ok := true
+	for i := range pub {
+		if !bytes.Equal(pub[i], pub2[i]) {
+			ok = false
+		}
+	}
+	if !ok {
+		t.Error("wots is incorrect")
+		t.Error(pub)
+		t.Error(pub2)
+		t.Error(priv)
+		t.Error(sign)
+	}
+}
+func TestWOTS2(t *testing.T) {
+	pseed, err := hex.DecodeString("18765478e91a8996e1ae9b8522cef17546d03dd658b4c29f1db6778a8a248bc9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prfP := newPRF(pseed)
+	priv := make(wotsPrivKey, wlen)
+	pub := make(wotsPubKey, wlen)
+	for i := range priv {
+		pub[i] = make([]byte, 32)
+		priv[i] = make([]byte, 32)
+		prfP.sumInt(uint32(i), priv[i])
+	}
+	seed, err := hex.DecodeString("9e05d7d9315321c5f30df2d3a3a729e48c43daceaaaf41bf6d7a433c22ba8383")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prf := newPRF(seed)
+	adr := make([]byte, 32)
+	adr[3] = 1
+	adr[7] = 2
+	adr[11] = 3
+	adr[15] = 4
+	priv.newWotsPubKey(prf, adr, pub)
+	cpub := "6577420a8e3a19d3fc4fa081294aa3d58105fca3b512148f4d22ef414d25b295a9df6b06acebbcc4cb4be69accba6afa2f4dd2b8aa981c6b08b9c11e0971d2a522a9e607aeba872a2e4d8c3bcff1e7b303dc14fa0735b88c3d4b43dd44ec1896903f8dd54ecc386a545bfd136568cc92ee73916d85f1b1c6868481ff2251746b7465f1cb14a5e1cb5d266273531dd0446ea491f9a502974e0bc938d5a155733fd00b04af1030a1b9f7c13fd37b5b570a9c57a641d33ce8a1a510499fc98e14e80897c99c2ecdb99c539bd7b429f35ad9108f9d9b96e444ad7184393c127e943287f7caa4526a2ba62cca49b9822edcb3829bd9a1dff3a8d5829eaaaf742e95dd0fc9156c0d59edf867fdcd98294e01e3bb6f0f4472fd4da52718fb063e7084abdec493dd10a2b1deecc2a65a87b86a83936c127e6d7ac7bcf055f4e8a14f34096606108f97270e52809c973a774c9efca3cfa7cfc58495809d951c9403c0ee0bc83a999dd7f3108176e00630c29952fc3fd5cdfcf1eaaed74193800a5bed810d243cb00fe3b79e5a9a68ee237a7cd9f41e36ca0d42debc773d555dd6328f19e2b95d0a98fb18513d0087a68dd7ea134c80d528ae2ce43291115c15b5b12f0012319b81bd176a5ef69d09a577d04abd23bdf2fb05b75b97cc5060bf3ed0fdc84dde08bab2eeb6bbc33f2eb29123727df41fb3c9f3af16c0495dde11e630131ea50927872bfdd4043e7c835dc3d13764e2290bdc64d7191ff5c5716efee847620928c3bd7ef4063bd889ed580380bda67702be5a6afe1ddd89f18577f80e78881cd0e6f1f782f90adc6f65a7e40c21c5bf02f82ca863dad917b931165993917b175efe5ac916cdf9ae5bc72a99601bacefcd7991115080b656cb2f6050079d5495cc1f539c54f5c02c55b400da52f2416a528ae50a90e9f30e91829eb5063bd2ed4dc6c08ffc4b71bec705339d1d9d98cb07a63674049357b000a21d45cf0b31e6f43e473a5980ad0c9183116886ed5c5a264cc546d26a0def18b4c32941a07b9df1d85c72c63a7fe85955204ff32b4c8df29f1ed6ca40cbfe126ba13d1ec987fd95c7afbb534d60bc02d56af0a19cc4849b044ea58e911522019de4c62e02bb6e45628cd25b12fbf954558b380bf75030288e2ee2ebe10c35bf82921d3330932181b23d4f39dedd2e23ee2c147e9e7b961fa8e88567ee2daa7f263303ee0283efbaafc06bf3cdb349cf590b5db4d2d6a68927693f0cf5209fad276b951099c2df7c79dd38c03b319f08a50e656a53e440b4a50ec105993251c70bee0f5d26eba164a71c04f4c75e7f765f0a0e39831bb90989f3ba6278ff4177f5fb30f5fb206df6b46e109372b5518773c609038ebddc046d98f3aa7e0ab63273a94b2193e9cf2a0b3d43c571b58928cfadadccfc6edc94b7c5ea8a53ca53f35c3b3fc381e9c79559cebcd5dd8bd251a4458dfd825206ebdd11bb2c1c1ec7dc5742d4868c2aaf2a427e574cdd3589b1bc25ad8615d8dad4d373a0494a8c8185d655e6f4338ecc4d57be2bdb7bad6606f699ba1e40c61d6f6aeb5adcf9a8dece3e9eb4f3e493faaf028de6b72b3bbdc4913d4b155d49b9300f30f15026d3836d0bf807fd291d87406c24d44c0253763852df425e253fbb67a48dd3554db1b2be28f4d3ed2d4e471df33e7c1417e423f73f9dcdaa83ceb2e08bcde4a8e68f6a77a40f7cb3ec8e377f6f34ef26b3d45734a3502ad4ab3c4f8ec02573175c1269050f51f3663d6cb821ac68271b19034d921569a325a7b035b91d52ecc6a957fafee1f7c5eeb5a1dcb13bfb8b185565c781db372736d6d9805fbd9a9c1943643927f214216100bd83fed3961a3f70892146fcc510fe7386fdf0902c5340e4a71e94125bc5bdd8acb08fbdbfc1ccf93f867b31bbf32e98158eb5f38dad1d4cd19bbf8268d932ebeb389b6459b9e55e345e737cd59259f326b3538d60aa7fba28dd06c4a2b65c7630273edb30ffb4969368573ba655f6a2659e65763f4db5eeece85f32a31ce3f1de77d7bbbdf370e7f0bf2f1435a0d52d0f8435dc77628f0a4d6f4eda1e4be02afde8495ef0905141fdaceb874dd579a0c900c54cc2c930d0a77051f4e9c1a74b28bf4ad6bb2f0655576c8c5810712420946c2f8052f2030adbb7e23592a1ada40edb97a6db4dbd0a1261e548d01bcbc9a7e8203cac99e484ed4ae59adcdfa370603f30b74e5805c761e10a6ead3e97b7495fa9ea5063b3fc41f779e3add02cadb1b5319a3e62d2185c393f35dba525ca3f865bb1e4331fc7717381c1d5082b79bb2e6fbf5a484fc56b501b19c2485fe86f6b7e33adfce1bc8545f766f7a01c4cdc5acd80e6e3ee1186b25e648cd53ec59d31ebcab22d06ac647b4acb2e1d7272b0a5aed2fd3ce50d68c6ae36c68d69839837f8866409eee92ed34f1eefa73df3526e69d1365985ec9d9bf45222401fc5dba84a28b3790cce1c7550258abcd3d3da6bd6d79aaa7a904502c71f8f54c6416376ee43974a1f82407ed77033c8166db18c596631bada3fcff294341a81649560f1a77f1277b68e07b19f24d20a96196e3e1ad99a2a9b7a16616376d4b4b14df57a8f2c4e746e5de5657fcc9e57b2eb380eb9ceb31f6ed7df0cfe5e8981e3158c2ff630199125f0a957fa2f1c70ae19089d3e51e5e4d1fd22e31ba658bdbda60e38bfc4e380b2584edfed42c92d5753050a85c7e4e608369bdd7f8879eb7bf9f2a557840468562db5b732c82b12597a53a75012a28305c37c4f99fbc5f82808e19cfa65c0a233390c0e0c101e4824d41b82028f6fc7514f2bb409e8b5530214f6d921069a6609dfa1ccba8023e8be968713b18db0a44b14cbea51f3ef91ac2371c4d7d320109e355413c62ef96bc00ce43297dd62b10f7b56ec4b0559e8c7b0c27c0bf20ef89f2988483b6fdce838ae8869864abf425da2cdaec1f1f669d459b3530db74064071bfa5ebf92c56f1c1564df1d83e200afacdc37aa48544b4ee3b42c80215403c35489e69dc0a805b17b119f"
+	allpub := make([]byte, 32*wlen)
+	for i, p := range pub {
+		copy(allpub[i*32:], p)
+	}
+	if cpub != hex.EncodeToString(allpub) {
+		t.Error("incorrect pub in wots")
+		t.Log(hex.EncodeToString(allpub))
+	}
+	msg, err := hex.DecodeString("fc718b77ee2d1888da0c600d3f90aa83814f35062d835de8a92f5e2cf42d8aab")
+	if err != nil {
+		t.Fatal(err)
+	}
+	adr = make([]byte, 32)
+	adr[3] = 1
+	adr[7] = 2
+	adr[11] = 3
+	adr[15] = 4
+	sign := priv.sign(msg, prf, adr)
+	csig := "6577420a8e3a19d3fc4fa081294aa3d58105fca3b512148f4d22ef414d25b2956da29ea5f5f8767fd5cc506ff08fe3395193caa38025f32749483ec98e15d5b8cfcaf7d678c94575722a64f4fe59dd4bba93c5cac1e5db2b997445df7a00e05faa6e79b7331e8951f88248633d12d108e77738414ba66d7bfa636ffc77624204d62b281a7eb8fcbac9850044ac5208bb337382b1af843d5c21e65f4570dd181ce8b89db33235364b97917099467e881adfedd8eed5ef2f94f9613059494c9b4fe6cdfc2fe8ffc588f1fca7c41500209661bea0659d2af697760c754126f3b063ab33b6c7d41527327c2b155da09b510cff5364742ba7019bceb7b2d8bd53e038a536c86cb6f3a889defaa19efff07c11c5059350b178ae9a5890ce78c99998581d670135e432dc239b3f2f9364c97a6e4e3e04496779960826f8cabd714e6ce0702090a97480a41d155da811456994e5cf55e21a8a8163ddceab244afaceca193c583fa5ece67e66ccdb7a4290308f1d4ff852d1d1d66c0dae2d6437df86d966a1e8393f5004f540685630b3ae45e39be1ca440348d44c7ec10a1d77e191b7e9460c25a6275f93c1b36c79c0de8300ee3f18259c1ab0deaba98ae0042fe49eff6e6ee57b9c278aa03d675b96bdc10d4c234f53291d67d0c9f177c53e5ae1c31afbe2687465d04b6cece6b640b0ddf4546836a751bf6db2612d5e4500c0393a07ef2e877926a6be0ed6d111bca72e4c087ff1d60a782eec3a7d6c081397a382601d9cf4769f8e860786f7a905d3afa11a6c232d871b85df4ec4a653712336e76ed1fe8af80d03708c6464f0cdb8cee2260e68a76858895986044ef9a8df2ff5a7969d39cb03e13f74b35b52745d6fbae9ed43c91d722cd2de4d614ff8b0ed297e91451b753f54738a452f047312fda547d21227837ab177d4ca69665beb949638253f2dfda758888e9552c75b6b5e340a2fe9a861e31be84e1234beff3593f4df0b4e041b223e59033cbca2a244aa997a402d4cd0da07493d2a4125649d7eab460a4a992fbad6b170995234e098e51a139dc4c978ba68efedd985682f41188832a8f46cf67a7c9b75c6429358662de15900d3a24928e0ab38616af74021f0e8f245628cd25b12fbf954558b380bf75030288e2ee2ebe10c35bf82921d33309321abef5b38493a592a0bddf8852435eb3d72b7426fcba5db96f35b5b1ecd26074dd20a723de86ac76e5f2e1417f50a18b5b697a383402d463d555db115ef9f23a7254e688f3b7ff8cb0ecbc4012780f0573889ccf450505e7a9d81b81a51c3cfaa7b0974d15ce2f825188cf9b935cf6adcbb37d16d8525dc31b07c85d7a46ceb9f6f28d67168619b53c506a6be7f8154ee5dedcf5f95618bed051ffc1a22289279f4b4b2ad12c609b0762d65f3f7529fb907a9a974a7c2f67a5e3d9dfdbb686e6f4912e6ac5aa4cce6a1c0c7b7e750a2204fef60c3dbfd8ebaddeaf4c312c9885e454ca6d7a32b1b4c3c78ff18ed629f8c1b205adfe2a2dc2008b6de93c2015f9b4535ba6830c4335bc61da48b13b171ca305351b33d5b9885d5ef92c11e75af9caf028de6b72b3bbdc4913d4b155d49b9300f30f15026d3836d0bf807fd291d8702fc507cccf5ea70043a1ab04c227fee6959f05f81bd273fdaa1e77f4d267fba411e314a58d3145e8c07cbbad6d9f40f5f1adceb125e302c380c6530d7dc91e2e14308c60bdfd6c1a83a17552a263c97c34a23c7607f186849484b3b9c4d66d09893bac671141595828b0689bba2ab576ba254cd32666662b9993f4b39bebb678d24676f7e18f5578238f5548c822b54d459876ba467d2fd9652a8b0fb13d056e66049ac78ba4dc00a2437ff0740d3f09ced154c1b505666819dcbed122c7c047e26a01f20c9c91f0233d45823af278135c04f0a844ccdd4947815d8c33cca8864f2d95a091f4fa5bd676ea0aa3ff3c661fdd0a00ec99de40049573e43c8625fc347b32f864be4d7fddf50e5185b2808712aad5c74e51dff9c9d46e7a5c41396b5656bfd9c76967f2523df02f730c0313738d4ab360e4afe40ac0b79819afbb1e9e270ad3414c4cda08c87eabe4b52cb40e2ddc87799f147a1e22904a43dad160f02e276092fdf49aa6a731a4e373fcefbdf7bf74811e012527078a97eba23ac4a66af63c751859b717f5ca9cebf2825772cbf801ace659f5c9c4b15fb71618d1adffbd9a3f65e1c0cfc5414d868fef70fc9d4165aeafb7d6a55e018038926c795713de32c8d1e7a7286f5fbc3fa3b93ad477207fb6115cde7178fd8de47c9076fbf5a484fc56b501b19c2485fe86f6b7e33adfce1bc8545f766f7a01c4cdc5a7ba6363da3b82fa2e19d8482599ae71910dd78a41b6b0b7014ef1c23d9cd352c947123fe5c1499dc577aab5f76754cb5f52ad9f7ab029931ffa038d19182b263bf4e0a02a800093f65a101614e3a8a60c3f820653bac02a6a97830957cedc4926957dc72fa0ed92d90e5eb2767bef4f976a6242eced91a0dc6b3e4b98f4b04a9596631bada3fcff294341a81649560f1a77f1277b68e07b19f24d20a96196e3ede6de0c6f4d1b4b155c05663f38c10c0fb783d20bc0577c7ec857be60102e4e0f6e2c87ae94e381c8e968acf379c16d2a4f3ccd41ebc9b9638b51d3ea15326ec73508362f642c6fe78d22c28fc4b33a2c4b666dd12b9578c0ca024e3292e2c385bfc6f07d88a6d55953e29e8f619eb8aeb0f62e66082ceffdaf17aa5d3e3bb0221a2b7ff58fe854cf972013283010a5b6a6fac76360f4048596f2ed2bcfa7f51bbce35f68f90b85386f31785efa3a88eff6807fb9e97e094ae7613b9b18edd2e629dce99a9ffb2e3090ef1905b4527c3874eaf8c68dde32838c0a29e54d1c053d3e93a20980af6d34325ec32d1f058b1ab299f6e24911e5ad03739dd2d8126d791e506c8b346e0ada92acf6d2ac1eb78a488e70070b7d8676470e97ea8c369f9f03631604d5f29d896b6a7e93db20b3c1c782a06cf4758a88e7e7980aa9777de"
+	allsig := make([]byte, 32*wlen)
+	for i, p := range sign {
+		copy(allsig[i*32:], p)
+	}
+	if csig != hex.EncodeToString(allsig) {
+		t.Error("incorrect sig in wots")
+	}
+}
