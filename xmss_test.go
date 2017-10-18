@@ -144,6 +144,27 @@ func TestXMSS16(t *testing.T) {
 	}
 }
 
+func TestXMSSMarshal(t *testing.T) {
+	seed := GenerateSeed()
+	mer := NewMerkle(10, seed)
+	msg := []byte("This is a test for XMSS height=16.")
+	mer.Sign(msg)
+	dat, err := mer.Marshal()
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log("marshalled Merkle", string(dat))
+	sig := mer.Sign(msg)
+	mer2, err := UnmarshalMerkle(dat)
+	if err != nil {
+		t.Error(err)
+	}
+	sig2 := mer2.Sign(msg)
+	if !bytes.Equal(sig, sig2) {
+		t.Error("invlaid marshal")
+	}
+}
+
 func BenchmarkXMSS16(b *testing.B) {
 	seed := GenerateSeed()
 	b.ResetTimer()

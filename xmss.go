@@ -23,20 +23,54 @@ package xmss
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 )
 
-type xmssPrivKey struct {
+//PrivKey is a private key of XMSS.
+type PrivKey struct {
 	msgPRF  *prf
 	wotsPRF *prf
 	pubPRF  *prf
 	root    []byte
 }
-type xmssPubKey struct {
+type pubkey struct {
 	root []byte
 	prf  *prf
 }
 
-func (x *xmssPrivKey) newWotsPrivKey(addrs addr, priv wotsPrivKey) {
+//MarshalJSON  marshals PrivKey into valid JSON.
+func (x *PrivKey) MarshalJSON() ([]byte, error) {
+	s := struct {
+		MsgSeed  []byte
+		WotsSeed []byte
+		PubSeed  []byte
+		Root     []byte
+	}{
+		MsgSeed:  x.msgPRF.seed,
+		WotsSeed: x.wotsPRF.seed,
+		PubSeed:  x.pubPRF.seed,
+		Root:     x.root,
+	}
+	return json.Marshal(&s)
+}
+
+//UnmarshalJSON  unmarshals JSON to PrivKey.
+func (x *PrivKey) UnmarshalJSON(b []byte) error {
+	s := struct {
+		MsgSeed  []byte
+		WotsSeed []byte
+		PubSeed  []byte
+		Root     []byte
+	}{}
+	err := json.Unmarshal(b, &s)
+	x.msgPRF = newPRF(s.MsgSeed)
+	x.wotsPRF = newPRF(s.WotsSeed)
+	x.pubPRF = newPRF(s.PubSeed)
+	x.root = s.Root
+	return err
+}
+
+func (x *PrivKey) newWotsPrivKey(addrs addr, priv wotsPrivKey) {
 	s := make([]byte, 32)
 	x.wotsPRF.sum(addrs, s)
 	p := newPRF(s)
@@ -126,7 +160,7 @@ func bytes2sig(b []byte) *xmssSig {
 //Sign signs by XMSS with MerkleTree.
 func (m *Merkle) Sign(msg []byte) []byte {
 	index := make([]byte, 32)
-	binary.BigEndian.PutUint32(index[28:], m.leaf)
+	binary.BigEndian.PutUint32(index[28:], m.Leaf)
 	r := make([]byte, 32*3)
 	m.priv.msgPRF.sum(index, r)
 	copy(r[32:], m.priv.root)
@@ -137,11 +171,11 @@ func (m *Merkle) Sign(msg []byte) []byte {
 		wsk[i] = make([]byte, 32)
 	}
 	addrs := make(addr, 32)
-	addrs.set(adrOTS, m.leaf)
+	addrs.set(adrOTS, m.Leaf)
 	m.priv.newWotsPrivKey(addrs, wsk)
 	sig := wsk.sign(hmsg, m.priv.pubPRF, addrs)
 	xs := xmssSig{
-		idx:  m.leaf,
+		idx:  m.Leaf,
 		seed: m.priv.pubPRF.seed,
 		r:    r[:32],
 		sig:  sig,
@@ -155,7 +189,7 @@ func (m *Merkle) Sign(msg []byte) []byte {
 //Verify verifies msg by XMSS.
 func Verify(bsig, msg, bpk []byte) bool {
 	sig := bytes2sig(bsig)
-	pk := xmssPubKey{
+	pk := pubkey{
 		root: bpk,
 		prf:  newPRF(sig.seed),
 	}
@@ -186,45 +220,3 @@ func Verify(bsig, msg, bpk []byte) bool {
 	}
 	return bytes.Equal(pk.root, node0)
 }
-
-// func (p *xmssPrivKey) treeHash(s uint32, addrs addr) []byte {
-// 	type nh struct {
-// 		node   []byte
-// 		height uint32
-// 	}
-// 	var i uint32
-// 	stack := make([]*nh, 0, 1<<p.height)
-// 	sk := make(wotsPrivKey, wlen)
-// 	pk := make(wotsPubKey, wlen)
-// 	for j := 0; j < wlen; j++ {
-// 		sk[j] = make([]byte, n)
-// 		pk[j] = make([]byte, n)
-// 	}
-// 	for i = 0; i < 1<<p.height; i++ {
-// 		addrs.set(0, adrLtree)
-// 		addrs.set(adrOTS, s+i)
-// 		newWotsPrivKey(p.prfP, sk)
-// 		sk.newWotsPubKey(p.prf, addrs, pk)
-// 		addrs.set(adrLtree, 1)
-// 		addrs.set(adrLtree, s+i)
-// 		node := &nh{
-// 			node:   pk.ltree(p.prf, addrs),
-// 			height: 0,
-// 		}
-// 		addrs.set(2, adrType)
-// 		index := i + s
-// 		addrs.set(adrIndex, index)
-// 		for len(stack) > 0 && stack[len(stack)-1].height == node.height {
-// 			index = (index - 1) >> 1
-// 			addrs.set(adrIndex, index)
-// 			randHash(stack[len(stack)-1].node, node.node, p.prf, addrs, node.node)
-// 			node.height++
-// 			stack = stack[:len(stack)-1]
-// 			addrs.set(adrHeight, node.height)
-// 		}
-// 		stack = append(stack, node)
-// 	}
-// 	out := make([]byte, 32)
-// 	copy(out, stack[len(stack)-1].node)
-// 	return out
-// }

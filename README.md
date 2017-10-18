@@ -26,24 +26,30 @@ are required to compile.
 
 
 ## Install
-    $ go get github.com/AidosKuneen/xmss
+    $ go get -u github.com/AidosKuneen/xmss
 
 
 ## Usage
 
 ```go
-	seed := GenerateSeed()
-	mer := NewMerkle(10, seed)
+    import "github.com/AidosKuneen/xmss"
+	seed := xmss.GenerateSeed()
+	mer := xmss.NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
-	sig := mer.Sign(msg)
-	if !Verify(sig, msg, mer.priv.root) {
+    sig := mer.Sign(msg)
+    pub:=mer.PublicKey()
+	if !xmss.Verify(sig, msg, pub) {
 		log.Println("signature is invalid")
 	}
+	//output Merkle contents to json
+	dat, err := mer.Marshal()
+	//convert json to Merkle
+	mer2, err := UnmarshalMerkle(dat)
 ```
 
 ## Performance
 
-XMSS-SHA2_16_256 benchmark Using the following test environment...
+XMSS-SHA2_16_256 benchmark using the following test environment...
 
 ```
 * Compiler: go version go1.9.1 linux/amd64
