@@ -22,17 +22,26 @@ package xmss
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
 )
 
+func generateSeed() []byte {
+	seed := make([]byte, 32)
+	if _, err := rand.Read(seed); err != nil {
+		panic(err)
+	}
+	return seed
+}
+
 func TestHashes(t *testing.T) {
 	fixed := make([]byte, 32)
 	fixed[31] = 0x2
-	key := GenerateSeed()
-	m := GenerateSeed()
-	m2 := GenerateSeed()
+	key := generateSeed()
+	m := generateSeed()
+	m2 := generateSeed()
 
 	s := sha256.New()
 	s.Write(fixed)

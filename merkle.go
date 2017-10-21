@@ -240,8 +240,8 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	return m
 }
 
-//Marshal  marshals  into valid JSON.
-func (m *Merkle) Marshal() ([]byte, error) {
+//MarshalJSON  marshals Merkle into valid JSON.
+func (m *Merkle) MarshalJSON() ([]byte, error) {
 	s := struct {
 		Leaf   uint32
 		Height uint32
@@ -259,8 +259,8 @@ func (m *Merkle) Marshal() ([]byte, error) {
 	return json.Marshal(&s)
 }
 
-//UnmarshalMerkle  Unmarshal  json into Merkle struct.
-func UnmarshalMerkle(b []byte) (*Merkle, error) {
+//UnmarshalJSON  unmarshals JSON to PrivKey.
+func (m *Merkle) UnmarshalJSON(b []byte) error {
 	s := struct {
 		Leaf   uint32
 		Height uint32
@@ -270,15 +270,14 @@ func UnmarshalMerkle(b []byte) (*Merkle, error) {
 	}{}
 	err := json.Unmarshal(b, &s)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &Merkle{
-		Leaf:   s.Leaf,
-		height: s.Height,
-		auth:   s.Auth,
-		priv:   s.Priv,
-		stacks: s.Stacks,
-	}, nil
+	m.Leaf = s.Leaf
+	m.height = s.Height
+	m.auth = s.Auth
+	m.priv = s.Priv
+	m.stacks = s.Stacks
+	return nil
 }
 
 //PublicKey returns public key (merkle root) of XMSS
@@ -312,7 +311,9 @@ func (m *Merkle) build() {
 		m.stacks[focus].update(1, m.priv)
 	}
 }
-func (m *Merkle) traverse() {
+
+//Traverse refreshes auth and stacks and increment leafe number.
+func (m *Merkle) Traverse() {
 	m.refreshAuth()
 	m.build()
 	m.Leaf++

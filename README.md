@@ -37,14 +37,15 @@ are required to compile.
 	mer := xmss.NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
 	sig := mer.Sign(msg)
-	pub:=mer.PublicKey()
+	pub := mer.PublicKey()
 	if !xmss.Verify(sig, msg, pub) {
 		log.Println("signature is invalid")
 	}
 	//output Merkle contents to json
-	dat, err := mer.Marshal()
+	dat, err := mer.MarshalJSON()
 	//convert json to Merkle
-	mer2, err := UnmarshalMerkle(dat)
+	mer2 := xmss.Merkle{}
+    err := mer2.UnmarshalJSON(dat)
 ```
 
 ## Performance

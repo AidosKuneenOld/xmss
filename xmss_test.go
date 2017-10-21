@@ -107,7 +107,7 @@ func TestXMSS(t *testing.T) {
 }
 
 func TestXMSS2(t *testing.T) {
-	seed := GenerateSeed()
+	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
 	var pre []byte
@@ -124,7 +124,7 @@ func TestXMSS2(t *testing.T) {
 }
 
 func TestXMSS3(t *testing.T) {
-	seed := GenerateSeed()
+	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
 	sig := mer.Sign(msg)
@@ -135,7 +135,7 @@ func TestXMSS3(t *testing.T) {
 }
 
 func TestXMSS16(t *testing.T) {
-	seed := GenerateSeed()
+	seed := generateSeed()
 	mer := NewMerkle(16, seed)
 	msg := []byte("This is a test for XMSS height=16.")
 	sig := mer.Sign(msg)
@@ -145,18 +145,18 @@ func TestXMSS16(t *testing.T) {
 }
 
 func TestXMSSMarshal(t *testing.T) {
-	seed := GenerateSeed()
+	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS height=16.")
 	mer.Sign(msg)
-	dat, err := mer.Marshal()
+	dat, err := mer.MarshalJSON()
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("marshalled Merkle", string(dat))
 	sig := mer.Sign(msg)
-	mer2, err := UnmarshalMerkle(dat)
-	if err != nil {
+	mer2 := Merkle{}
+	if err = mer2.UnmarshalJSON(dat); err != nil {
 		t.Error(err)
 	}
 	sig2 := mer2.Sign(msg)
@@ -166,14 +166,14 @@ func TestXMSSMarshal(t *testing.T) {
 }
 
 func BenchmarkXMSS16(b *testing.B) {
-	seed := GenerateSeed()
+	seed := generateSeed()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = NewMerkle(16, seed)
 	}
 }
 func BenchmarkXMSS16Sign(b *testing.B) {
-	seed := GenerateSeed()
+	seed := generateSeed()
 	mer := NewMerkle(16, seed)
 	msg := []byte("This is a test for XMSS.")
 	b.ResetTimer()
@@ -182,7 +182,7 @@ func BenchmarkXMSS16Sign(b *testing.B) {
 	}
 }
 func BenchmarkXMSS16Veri(b *testing.B) {
-	seed := GenerateSeed()
+	seed := generateSeed()
 	mer := NewMerkle(16, seed)
 	msg := []byte("This is a test for XMSS.")
 	sig := mer.Sign(msg)

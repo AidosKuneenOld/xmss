@@ -182,7 +182,7 @@ func (m *Merkle) Sign(msg []byte) []byte {
 		auth: m.auth,
 	}
 	out := xs.bytes()
-	m.traverse()
+	m.Traverse()
 	return out
 }
 

@@ -169,12 +169,3 @@ func (p *prf) sumInt(m uint32, out []byte) {
 	binary.BigEndian.PutUint32(buf[28:], m)
 	p.finish(buf, out)
 }
-
-//GenerateSeed generates a new 32 bytes seed.
-func GenerateSeed() []byte {
-	seed := make([]byte, 32)
-	if _, err := rand.Read(seed); err != nil {
-		panic(err)
-	}
-	return seed
-}

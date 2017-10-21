@@ -46,7 +46,7 @@ func TestBase16(t *testing.T) {
 	}
 }
 func TestWOTS(t *testing.T) {
-	pseed := GenerateSeed()
+	pseed := generateSeed()
 	prfP := newPRF(pseed)
 	priv := make(wotsPrivKey, wlen)
 	pub := make(wotsPubKey, wlen)
@@ -55,7 +55,7 @@ func TestWOTS(t *testing.T) {
 		priv[i] = make([]byte, 32)
 		prfP.sumInt(uint32(i), priv[i])
 	}
-	seed := GenerateSeed()
+	seed := generateSeed()
 	prf := newPRF(seed)
 	priv.newWotsPubKey(prf, make([]byte, 32), pub)
 	msg := []byte("This is a test for wots.")
