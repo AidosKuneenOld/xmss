@@ -33,7 +33,7 @@ are required to compile.
 
 ```go
 	import "github.com/AidosKuneen/xmss"
-	seed := xmss.GenerateSeed()
+	seed := []byte{0x01,0x02...}
 	mer := xmss.NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
 	sig := mer.Sign(msg)
