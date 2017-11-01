@@ -108,7 +108,7 @@ func (pk wotsPubKey) ltree(p *prf, addrs addr) []byte {
 			randHash(pk[2*i], pk[2*i+1], p, addrs, pk[i])
 		}
 		if l&0x1 == 1 {
-			pk[l>>1] = pk[l-1]
+			copy(pk[l>>1], pk[l-1])
 		}
 		height++
 		addrs.set(adrHeight, height)

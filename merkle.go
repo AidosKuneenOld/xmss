@@ -23,6 +23,7 @@ package xmss
 import (
 	"encoding/json"
 	"math"
+	"sync"
 )
 
 //NH represents a node in a merkle tree.
@@ -117,13 +118,29 @@ func (s *Stack) initialize(start uint32, height uint32) {
 	s.stack = s.stack[:0]
 }
 
+var skpool = sync.Pool{
+	New: func() interface{} {
+		sk := make(wotsPrivKey, wlen)
+		for j := 0; j < wlen; j++ {
+			sk[j] = make([]byte, n)
+		}
+		return sk
+	},
+}
+
+var pkpool = sync.Pool{
+	New: func() interface{} {
+		pk := make(wotsPubKey, wlen)
+		for j := 0; j < wlen; j++ {
+			pk[j] = make([]byte, n)
+		}
+		return pk
+	},
+}
+
 func (s *Stack) newleaf(priv *PrivKey) {
-	sk := make(wotsPrivKey, wlen)
-	pk := make(wotsPubKey, wlen)
-	for j := 0; j < wlen; j++ {
-		sk[j] = make([]byte, n)
-		pk[j] = make([]byte, n)
-	}
+	sk := skpool.Get().(wotsPrivKey)
+	pk := pkpool.Get().(wotsPubKey)
 	addrs := make(addr, 32)
 
 	// addrs.set(adrType, 0)
@@ -132,14 +149,19 @@ func (s *Stack) newleaf(priv *PrivKey) {
 	sk.newWotsPubKey(priv.pubPRF, addrs, pk)
 	addrs.set(adrType, 1)
 	addrs.set(adrLtree, s.leaf)
+	nn := pk.ltree(priv.pubPRF, addrs)
 	node := &NH{
-		node:   pk.ltree(priv.pubPRF, addrs),
+		node:   make([]byte, 32),
 		height: 0,
 		index:  s.leaf,
 	}
+	copy(node.node, nn)
 	s.push(node)
 	s.leaf++
+	skpool.Put(sk)
+	pkpool.Put(pk)
 }
+
 func (s *Stack) update(nn uint64, priv *PrivKey) {
 	if len(s.stack) > 0 && (s.stack[len(s.stack)-1].height == s.height) {
 		return

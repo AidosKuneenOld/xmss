@@ -191,3 +191,10 @@ func BenchmarkXMSS16Veri(b *testing.B) {
 		Verify(sig, msg, mer.priv.root)
 	}
 }
+func BenchmarkXMSS20(b *testing.B) {
+	seed := generateSeed()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = NewMerkle(20, seed)
+	}
+}
