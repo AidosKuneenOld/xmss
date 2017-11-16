@@ -28,7 +28,7 @@ import (
 )
 
 func TestXMSS(t *testing.T) {
-	t.Log(runtime.NumCPU(), runtime.GOMAXPROCS)
+	t.Log(runtime.NumCPU(), runtime.GOMAXPROCS(0))
 	skseed, err := hex.DecodeString("b041bf7ca73cc7905aadc1b6460da2e50206652e3d57a61487beb09664da308d")
 	if err != nil {
 		t.Fatal(err)
