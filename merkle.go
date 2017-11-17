@@ -209,7 +209,7 @@ func (s *Stack) delete(i int) {
 type Merkle struct {
 	//Leaf is the number of unused leaf.
 	Leaf   uint32
-	height uint32
+	Height uint32
 	stacks []*Stack
 	auth   [][]byte
 	priv   *PrivKey
@@ -229,7 +229,7 @@ func NewMerkle(h uint32, seed []byte) *Merkle {
 func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	m := &Merkle{
 		Leaf:   0,
-		height: h,
+		Height: h,
 		stacks: make([]*Stack, h),
 		auth:   make([][]byte, h),
 		priv: &PrivKey{
@@ -272,7 +272,7 @@ func (m *Merkle) MarshalJSON() ([]byte, error) {
 		Stacks []*Stack
 	}{
 		Leaf:   m.Leaf,
-		Height: m.height,
+		Height: m.Height,
 		Auth:   m.auth,
 		Priv:   m.priv,
 		Stacks: m.stacks,
@@ -295,7 +295,7 @@ func (m *Merkle) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	m.Leaf = s.Leaf
-	m.height = s.Height
+	m.Height = s.Height
 	m.auth = s.Auth
 	m.priv = s.Priv
 	m.stacks = s.Stacks
@@ -309,7 +309,7 @@ func (m *Merkle) PublicKey() []byte {
 
 func (m *Merkle) refreshAuth() {
 	var h uint32
-	for h = 0; h < m.height; h++ {
+	for h = 0; h < m.Height; h++ {
 		var pow uint32 = 1 << h
 		if (m.Leaf+1)&(pow-1) == 0 {
 			m.auth[h] = m.stacks[h].top().node
@@ -320,10 +320,10 @@ func (m *Merkle) refreshAuth() {
 }
 func (m *Merkle) build() {
 	var i uint32
-	for i = 0; i < ((2 * m.height) - 1); i++ {
+	for i = 0; i < ((2 * m.Height) - 1); i++ {
 		var min uint32 = math.MaxUint32
 		var h, focus uint32
-		for h = 0; h < m.height; h++ {
+		for h = 0; h < m.Height; h++ {
 			low := m.stacks[h].low()
 			if low < min {
 				min = low
