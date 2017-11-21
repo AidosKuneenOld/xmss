@@ -65,15 +65,23 @@ func chain(x []byte, start, step byte, p *prf, addrs addr, out []byte) {
 }
 
 func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
-	var i uint32
 	var wg sync.WaitGroup
-	for i = 0; i < wlen; i++ {
+	ncpu := runtime.NumCPU()
+	nitem := wlen / ncpu
+	for i := 0; i <= ncpu; i++ {
 		wg.Add(1)
-		go func(i uint32) {
+		go func(i int) {
+			start := i * nitem
+			end := start + nitem
+			if end > wlen {
+				end = wlen
+			}
 			a := make(addr, 32)
 			copy(a, addrs)
-			a.set(adrChain, i)
-			chain(priv[i], 0, w-1, p, a, pubkey[i])
+			for i := start; i < end; i++ {
+				a.set(adrChain, uint32(i))
+				chain(priv[i], 0, w-1, p, a, pubkey[i])
+			}
 			wg.Done()
 		}(i)
 	}
