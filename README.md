@@ -92,14 +92,13 @@ on DIGNO M KYL22(Android Smartphone):
 ```
 
 
-For XMSS-SHA2_10_256, tt takes 
+For XMSS-SHA2_10_256, it takes 
 
 * about 9.1 seconds to generating a keypair,
 * about 52 mS to sign a message,
 * about 4.4 mS to verify a signature.
 
-
-``
+```
 BenchmarkXMSS10     	       1	9140479008 ns/op
 BenchmarkXMSS10Sign 	     100	  51787360 ns/op
 BenchmarkXMSS10Veri 	     300	   4368742 ns/op
