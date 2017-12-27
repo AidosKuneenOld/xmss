@@ -191,10 +191,38 @@ func BenchmarkXMSS16Veri(b *testing.B) {
 		Verify(sig, msg, mer.priv.root)
 	}
 }
-func BenchmarkXMSS20(b *testing.B) {
+
+// func BenchmarkXMSS20(b *testing.B) {
+// 	seed := generateSeed()
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		_ = NewMerkle(20, seed)
+// 	}
+// }
+
+func BenchmarkXMSS10(b *testing.B) {
 	seed := generateSeed()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewMerkle(20, seed)
+		_ = NewMerkle(10, seed)
+	}
+}
+func BenchmarkXMSS10Sign(b *testing.B) {
+	seed := generateSeed()
+	mer := NewMerkle(10, seed)
+	msg := []byte("This is a test for XMSS.")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = mer.Sign(msg)
+	}
+}
+func BenchmarkXMSS10Veri(b *testing.B) {
+	seed := generateSeed()
+	mer := NewMerkle(10, seed)
+	msg := []byte("This is a test for XMSS.")
+	sig := mer.Sign(msg)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Verify(sig, msg, mer.priv.root)
 	}
 }

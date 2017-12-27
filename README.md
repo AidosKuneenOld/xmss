@@ -50,7 +50,7 @@ are required to compile.
 
 ## Performance
 
-XMSS-SHA2_16_256 benchmark using the following test environment...
+Using the following test environment...
 
 ```
 * Compiler: go version go1.9.1 linux/amd64
@@ -60,14 +60,44 @@ XMSS-SHA2_16_256 benchmark using the following test environment...
 ```
 
 
-It takes 
+For XMSS-SHA2_10_256, it takes 
+
+* about 0.9 seconds to generating a keypair,
+* about 6.7 mS to sign a message,
+* about 720 uS to verify a signature.
+
+For XMSS-SHA2_16_256, it takes 
 
 * about 55 seconds to generating a keypair,
 * about 7.2 mS to sign a message,
 * about 680 uS to verify a signature.
 
+
 ```
+BenchmarkXMSS10-2       	       2	 871073106 ns/op
+BenchmarkXMSS10Sign-2   	     200	   6680257 ns/op
+BenchmarkXMSS10Veri-2   	    2000	    716316 ns/op
 BenchmarkXMSS16-2       	       1	54495501572 ns/op
 BenchmarkXMSS16Sign-2   	     200	   7239790 ns/op
 BenchmarkXMSS16Veri-2   	    2000	    677960 ns/op
+```
+
+on DIGNO M KYL22(Android Smartphone):
+
+```
+* Compiler: go version go1.9.1 linux/arm
+* OS: 	Android 4.2.2
+* CPU:	Qualcomm Snapdragon 800 MSM8974 2.2GHz (quad core)
+* Memory: 2 GB
+```
+
+
+For XMSS-SHA2_10_256, tt takes 
+
+* about  seconds to generating a keypair,
+* about  mS to sign a message,
+* about uS to verify a signature.
+
+
+``
 ```
