@@ -130,7 +130,7 @@ about  8.5 minutes to generating a keypair,
 
 
 ```
-BenchmarkXMSS10-16        	2000000000	         0.23 ns/op
+BenchmarkXMSS10-16        	       3	 461776815 ns/op
 BenchmarkXMSS10Sign-16    	     500	   4457839 ns/op
 BenchmarkXMSS10Veri-16    	    3000	    453052 ns/op
 BenchmarkXMSS16-16        	       1	29257509692 ns/op
