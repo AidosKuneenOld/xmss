@@ -114,20 +114,27 @@ on a cloud server:
 
 For XMSS-SHA2_10_256, it takes 
 
-* about  seconds to generating a keypair,
-* about  mS to sign a message,
-* about  mS to verify a signature.
+* about 0.23 nS to generating a keypair,
+* about 4.5 mS to sign a message,
+* about 450 uS to verify a signature.
 
 For XMSS-SHA2_16_256, it takes 
 
-* about  28 seconds to generating a keypair,
+* about  29 seconds to generating a keypair,
 * about  4.4 mS to sign a message,
 * about  510 uS to verify a signature.
 
 
 For XMSS-SHA2_20_256, it takes 
-about  seconds to generating a keypair,
+about  8.5 minutes to generating a keypair,
 
 
 ```
+BenchmarkXMSS10-16        	2000000000	         0.23 ns/op
+BenchmarkXMSS10Sign-16    	     500	   4457839 ns/op
+BenchmarkXMSS10Veri-16    	    3000	    453052 ns/op
+BenchmarkXMSS16-16        	       1	29257509692 ns/op
+BenchmarkXMSS16Sign-16    	     500	   4250762 ns/op
+BenchmarkXMSS16Veri-16    	    3000	    492381 ns/op
+BenchmarkXMSS20-16        	       1	510150155087 ns/op
 ```
