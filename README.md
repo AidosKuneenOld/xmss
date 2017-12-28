@@ -114,7 +114,7 @@ on a cloud server:
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 0.23 nS to generating a keypair,
+* about 0.46 seconds to generating a keypair,
 * about 4.5 mS to sign a message,
 * about 450 uS to verify a signature.
 
