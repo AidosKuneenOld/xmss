@@ -199,7 +199,9 @@ func BenchmarkXMSS20(b *testing.B) {
 func BenchmarkXMSS10(b *testing.B) {
 	seed := generateSeed()
 	b.ResetTimer()
-	_ = NewMerkle(10, seed)
+	for i := 0; i < b.N; i++ {
+		_ = NewMerkle(10, seed)
+	}
 }
 func BenchmarkXMSS10Sign(b *testing.B) {
 	seed := generateSeed()
