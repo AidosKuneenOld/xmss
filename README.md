@@ -103,3 +103,31 @@ BenchmarkXMSS10     	       1	9140479008 ns/op
 BenchmarkXMSS10Sign 	     100	  51787360 ns/op
 BenchmarkXMSS10Veri 	     300	   4368742 ns/op
 ```
+
+on a cloud server:
+
+* Compiler: go version go1.8.1 linux/amd64
+* Kernel: Linux 4.8.0-58-generic #63~16.04.1-Ubuntu SMP Mon Jun 26 18:08:51 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+* CPU:  CAMD Ryzen 7 1700X Eight-Core Processor @ 2.20GHz (8 cores)
+* Memory: 64 GB
+
+
+For XMSS-SHA2_10_256, it takes 
+
+* about  seconds to generating a keypair,
+* about  mS to sign a message,
+* about  mS to verify a signature.
+
+For XMSS-SHA2_16_256, it takes 
+
+* about  28 seconds to generating a keypair,
+* about  4.4 mS to sign a message,
+* about  510 uS to verify a signature.
+
+
+For XMSS-SHA2_20_256, it takes 
+about  seconds to generating a keypair,
+
+
+```
+```

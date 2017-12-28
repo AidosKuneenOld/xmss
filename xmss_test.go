@@ -168,9 +168,7 @@ func TestXMSSMarshal(t *testing.T) {
 func BenchmarkXMSS16(b *testing.B) {
 	seed := generateSeed()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = NewMerkle(16, seed)
-	}
+	_ = NewMerkle(16, seed)
 }
 func BenchmarkXMSS16Sign(b *testing.B) {
 	seed := generateSeed()
@@ -192,20 +190,18 @@ func BenchmarkXMSS16Veri(b *testing.B) {
 	}
 }
 
-// func BenchmarkXMSS20(b *testing.B) {
-// 	seed := generateSeed()
-// 	b.ResetTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		_ = NewMerkle(20, seed)
-// 	}
-// }
+func BenchmarkXMSS20(b *testing.B) {
+	seed := generateSeed()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = NewMerkle(20, seed)
+	}
+}
 
 func BenchmarkXMSS10(b *testing.B) {
 	seed := generateSeed()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = NewMerkle(10, seed)
-	}
+	_ = NewMerkle(10, seed)
 }
 func BenchmarkXMSS10Sign(b *testing.B) {
 	seed := generateSeed()
