@@ -139,7 +139,7 @@ var pkpool = sync.Pool{
 	},
 }
 
-func (s *Stack) newleaf(priv *PrivKey) {
+func (s *Stack) newleaf(priv *PrivKey, isGo bool) {
 	sk := skpool.Get().(wotsPrivKey)
 	pk := pkpool.Get().(wotsPubKey)
 	addrs := make(addr, 32)
@@ -147,7 +147,11 @@ func (s *Stack) newleaf(priv *PrivKey) {
 	// addrs.set(adrType, 0)
 	addrs.set(adrOTS, s.leaf)
 	priv.newWotsPrivKey(addrs, sk)
-	sk.newWotsPubKey(priv.pubPRF, addrs, pk)
+	if isGo {
+		sk.goNewWotsPubKey(priv.pubPRF, addrs, pk)
+	} else {
+		sk.newWotsPubKey(priv.pubPRF, addrs, pk)
+	}
 	addrs.set(adrType, 1)
 	addrs.set(adrLtree, s.leaf)
 	nn := pk.ltree(priv.pubPRF, addrs)
@@ -165,7 +169,13 @@ func (s *Stack) newleaf(priv *PrivKey) {
 
 func (s *Stack) update(nn uint64, priv *PrivKey) {
 	s.updateSub(nn, priv, func() {
-		s.newleaf(priv)
+		s.newleaf(priv, false)
+	})
+}
+
+func (s *Stack) goUpdate(nn uint64, priv *PrivKey) {
+	s.updateSub(nn, priv, func() {
+		s.newleaf(priv, true)
 	})
 }
 
@@ -368,7 +378,7 @@ func (m *Merkle) build() {
 				focus = h
 			}
 		}
-		m.stacks[focus].update(1, m.priv)
+		m.stacks[focus].goUpdate(1, m.priv)
 	}
 }
 
