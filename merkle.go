@@ -23,6 +23,7 @@ package xmss
 import (
 	"encoding/json"
 	"math"
+	"runtime"
 	"sync"
 )
 
@@ -163,6 +164,12 @@ func (s *Stack) newleaf(priv *PrivKey) {
 }
 
 func (s *Stack) update(nn uint64, priv *PrivKey) {
+	s.updateSub(nn, priv, func() {
+		s.newleaf(priv)
+	})
+}
+
+func (s *Stack) updateSub(nn uint64, priv *PrivKey, newleaf func()) {
 	if len(s.stack) > 0 && (s.stack[len(s.stack)-1].height == s.height) {
 		return
 	}
@@ -186,7 +193,7 @@ func (s *Stack) update(nn uint64, priv *PrivKey) {
 				continue
 			}
 		}
-		s.newleaf(priv)
+		newleaf()
 	}
 }
 func (s *Stack) top() *NH {
@@ -240,20 +247,51 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 		},
 	}
 
+	var wg sync.WaitGroup
+	ncpu := runtime.NumCPU()
+	nproc := uint32(math.Log2(float64(ncpu)))
+	if ncpu != (1 << nproc) {
+		nproc++
+	}
+	ntop := make([]*NH, (1<<nproc)-1)
+	for i := uint32(1); i < (1 << nproc); i++ {
+		wg.Add(1)
+		go func(i uint32) {
+			s := Stack{
+				stack:  make([]*NH, 0, (h-nproc)+1),
+				height: h - nproc,
+				leaf:   (1 << (h - nproc)) * i,
+			}
+			s.update(1<<(h-nproc+1)-1, m.priv)
+			ntop[i-1] = s.top()
+			wg.Done()
+		}(i)
+	}
 	s := Stack{
 		stack:  make([]*NH, 0, h+1),
 		height: h,
 		leaf:   0,
 	}
 	for i := uint32(0); i < h; i++ {
+		if i == h-nproc {
+			wg.Wait()
+		}
 		s.update(1, m.priv)
 		m.stacks[i] = &Stack{
+			stack:  make([]*NH, 0, i+1),
 			height: i,
 			leaf:   1 << i,
 		}
-		m.stacks[i].stack = make([]*NH, 0, i+1)
 		m.stacks[i].push(s.top())
-		s.update(1<<(i+1)-1, m.priv)
+		if i < h-nproc {
+			s.update(1<<(i+1)-1, m.priv)
+		} else {
+			s.updateSub(1<<(i-(h-nproc)+1)-1, m.priv, func() {
+				n := ntop[0]
+				ntop = ntop[1:]
+				s.push(n)
+			})
+		}
 		m.auth[i] = make([]byte, 32)
 		copy(m.auth[i], s.top().node)
 	}

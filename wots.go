@@ -22,7 +22,6 @@ package xmss
 
 import (
 	"runtime"
-	"sync"
 	"unsafe"
 )
 
@@ -65,28 +64,35 @@ func chain(x []byte, start, step byte, p *prf, addrs addr, out []byte) {
 }
 
 func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
-	var wg sync.WaitGroup
-	ncpu := runtime.NumCPU()
-	nitem := wlen / ncpu
-	for i := 0; i <= ncpu; i++ {
-		wg.Add(1)
-		go func(i int) {
-			start := i * nitem
-			end := start + nitem
-			if end > wlen {
-				end = wlen
-			}
-			a := make(addr, 32)
-			copy(a, addrs)
-			for i := start; i < end; i++ {
-				a.set(adrChain, uint32(i))
-				chain(priv[i], 0, w-1, p, a, pubkey[i])
-			}
-			wg.Done()
-		}(i)
+	for i := 0; i < len(pubkey); i++ {
+		addrs.set(adrChain, uint32(i))
+		chain(priv[i], 0, w-1, p, addrs, pubkey[i])
 	}
-	wg.Wait()
 }
+
+// func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
+// 	var wg sync.WaitGroup
+// 	ncpu := runtime.NumCPU()
+// 	nitem := wlen / ncpu
+// 	for i := 0; i <= ncpu; i++ {
+// 		wg.Add(1)
+// 		go func(i int) {
+// 			start := i * nitem
+// 			end := start + nitem
+// 			if end > wlen {
+// 				end = wlen
+// 			}
+// 			a := make(addr, 32)
+// 			copy(a, addrs)
+// 			for i := start; i < end; i++ {
+// 				a.set(adrChain, uint32(i))
+// 				chain(priv[i], 0, w-1, p, a, pubkey[i])
+// 			}
+// 			wg.Done()
+// 		}(i)
+// 	}
+// 	wg.Wait()
+// }
 
 const (
 	toSig = iota
