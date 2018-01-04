@@ -119,29 +119,13 @@ func (s *Stack) initialize(start uint32, height uint32) {
 	s.stack = s.stack[:0]
 }
 
-var skpool = sync.Pool{
-	New: func() interface{} {
-		sk := make(wotsPrivKey, wlen)
-		for j := 0; j < wlen; j++ {
-			sk[j] = make([]byte, n)
-		}
-		return sk
-	},
-}
-
-var pkpool = sync.Pool{
-	New: func() interface{} {
-		pk := make(wotsPubKey, wlen)
-		for j := 0; j < wlen; j++ {
-			pk[j] = make([]byte, n)
-		}
-		return pk
-	},
-}
-
 func (s *Stack) newleaf(priv *PrivKey, isGo bool) {
-	sk := skpool.Get().(wotsPrivKey)
-	pk := pkpool.Get().(wotsPubKey)
+	pk := make(wotsPubKey, wlen)
+	sk := make(wotsPrivKey, wlen)
+	for j := 0; j < wlen; j++ {
+		pk[j] = make([]byte, n)
+		sk[j] = make([]byte, n)
+	}
 	addrs := make(addr, 32)
 
 	// addrs.set(adrType, 0)
@@ -163,8 +147,6 @@ func (s *Stack) newleaf(priv *PrivKey, isGo bool) {
 	copy(node.node, nn)
 	s.push(node)
 	s.leaf++
-	skpool.Put(sk)
-	pkpool.Put(pk)
 }
 
 func (s *Stack) update(nn uint64, priv *PrivKey) {
