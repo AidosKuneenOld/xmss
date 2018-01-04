@@ -73,7 +73,8 @@ func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
 
 func goChain(p *prf, addrs addr, fchain func(i int, a addr)) {
 	var wg sync.WaitGroup
-	ncpu := runtime.NumCPU()
+	ncpu := numCPU()
+	nprev := runtime.GOMAXPROCS(ncpu)
 	nitem := wlen / ncpu
 	for i := 0; i <= ncpu; i++ {
 		wg.Add(1)
@@ -93,6 +94,7 @@ func goChain(p *prf, addrs addr, fchain func(i int, a addr)) {
 		}(i)
 	}
 	wg.Wait()
+	runtime.GOMAXPROCS(nprev)
 }
 
 func (priv wotsPrivKey) goNewWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {

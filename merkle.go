@@ -240,7 +240,8 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	}
 
 	var wg sync.WaitGroup
-	ncpu := runtime.NumCPU()
+	ncpu := numCPU()
+	nprev := runtime.GOMAXPROCS(ncpu)
 	nproc := uint32(math.Log2(float64(ncpu)))
 	if ncpu != (1 << nproc) {
 		nproc++
@@ -289,6 +290,7 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	}
 	s.update(1, m.priv)
 	copy(m.priv.root, s.top().node)
+	runtime.GOMAXPROCS(nprev)
 	return m
 }
 
