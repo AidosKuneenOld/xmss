@@ -94,21 +94,21 @@ on DIGNO M KYL22(Android Smartphone):
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 9.2 seconds to generating a keypair,
-* about 52 mS to sign a message,
-* about 4.1 mS to verify a signature.
+* about 2.4 seconds to generating a keypair,
+* about 34 mS to sign a message,
+* about 3.5 mS to verify a signature.
 
 ```
-BenchmarkXMSS10     	       1	9248567950 ns/op
-BenchmarkXMSS10Sign 	     100	  51699545 ns/op
-BenchmarkXMSS10Veri 	     300	   4088763 ns/op
+BenchmarkXMSS10-2       	       1	2449496769 ns/op
+BenchmarkXMSS10Sign-2   	     100	  34030373 ns/op
+BenchmarkXMSS10Veri-2   	     500	   3450896 ns/op
 ```
 
 on a cloud server:
 
 * Compiler: go version go1.8.1 linux/amd64
 * Kernel: Linux 4.8.0-58-generic #63~16.04.1-Ubuntu SMP Mon Jun 26 18:08:51 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
-* CPU:  CAMD Ryzen 7 1700X Eight-Core Processor @ 2.20GHz (8 cores)
+* CPU:  CAMD Ryzen 7 1700X Eight-Core Processor @ 2.20GHz (16 cores)
 * Memory: 64 GB
 
 
