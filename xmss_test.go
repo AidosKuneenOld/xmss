@@ -134,7 +134,19 @@ func TestXMSS3(t *testing.T) {
 		t.Error("XMSS sig is incorrect")
 	}
 }
-
+func TestXMSS4(t *testing.T) {
+	seed := generateSeed()
+	mer := NewMerkle(2, seed)
+	msg := []byte("This is a test for XMSS.")
+	sig := mer.Sign(msg)
+	if !Verify(sig, msg, mer.priv.root) {
+		t.Error("XMSS sig is incorrect")
+	}
+	msg[0] = 0
+	if Verify(sig, msg, mer.priv.root) {
+		t.Error("XMSS sig is incorrect")
+	}
+}
 func TestXMSS16(t *testing.T) {
 	seed := generateSeed()
 	mer := NewMerkle(16, seed)
