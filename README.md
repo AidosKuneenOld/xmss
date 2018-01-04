@@ -82,7 +82,7 @@ BenchmarkXMSS16Sign-2   	     300	   7059517 ns/op
 BenchmarkXMSS16Veri-2   	    3000	    525392 ns/op
 ```
 
-on DIGNO M KYL22(Android Smartphone):
+On DIGNO M KYL22(Android Smartphone):
 
 ```
 * Compiler: go version go1.9.1 linux/arm
@@ -104,13 +104,14 @@ BenchmarkXMSS10Sign-2   	     100	  34030373 ns/op
 BenchmarkXMSS10Veri-2   	     500	   3450896 ns/op
 ```
 
-on a cloud server:
+On a cloud server:
 
+```
 * Compiler: go version go1.8.1 linux/amd64
 * Kernel: Linux 4.8.0-58-generic #63~16.04.1-Ubuntu SMP Mon Jun 26 18:08:51 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
 * CPU:  CAMD Ryzen 7 1700X Eight-Core Processor @ 2.20GHz (16 cores)
 * Memory: 64 GB
-
+```
 
 For XMSS-SHA2_10_256, it takes 
 
@@ -137,5 +138,4 @@ BenchmarkXMSS16-16        	       1	8792942533 ns/op
 BenchmarkXMSS16Sign-16    	     500	   4104281 ns/op
 BenchmarkXMSS16Veri-16    	    5000	    441616 ns/op
 BenchmarkXMSS20-16        	       1	238817500311 ns/op
-
 ```
