@@ -75,8 +75,8 @@ func goChain(p *prf, addrs addr, fchain func(i int, a addr)) {
 	var wg sync.WaitGroup
 	ncpu := numCPU()
 	nprev := runtime.GOMAXPROCS(ncpu)
-	nitem := wlen / ncpu
-	for i := 0; i <= ncpu; i++ {
+	nitem := wlen/ncpu + 1
+	for i := 0; i < ncpu; i++ {
 		wg.Add(1)
 		go func(i int) {
 			start := i * nitem
@@ -86,9 +86,9 @@ func goChain(p *prf, addrs addr, fchain func(i int, a addr)) {
 			}
 			a := make(addr, 32)
 			copy(a, addrs)
-			for i := start; i < end; i++ {
-				a.set(adrChain, uint32(i))
-				fchain(i, a)
+			for j := start; j < end; j++ {
+				a.set(adrChain, uint32(j))
+				fchain(j, a)
 			}
 			wg.Done()
 		}(i)
