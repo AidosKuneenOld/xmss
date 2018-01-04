@@ -246,6 +246,10 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	if ncpu != (1 << nproc) {
 		nproc++
 	}
+	if h <= nproc {
+		ncpu = 1
+		nproc = 0
+	}
 	ntop := make([]*NH, (1<<nproc)-1)
 	for i := uint32(1); i < (1 << nproc); i++ {
 		wg.Add(1)
