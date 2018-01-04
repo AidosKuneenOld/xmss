@@ -11,7 +11,7 @@ XMSS (eXtended Merkle Signature Scheme)
 This library is for creating keys, signing messages and verifing the signature by XMSS in golang.
 
 This code implements XMSS-SHA2_10_256, 
-XMSS-SHA2_16_256, XMSS-SHA2_20_26 described on IRTF draft [XMSS: Extended Hash-Based Signatures](https://datatracker.ietf.org/doc/draft-irtf-cfrg-xmss-hash-based-signatures/) and 
+XMSS-SHA2_16_256, XMSS-SHA2_20_256 described on IRTF draft [XMSS: Extended Hash-Based Signatures](https://datatracker.ietf.org/doc/draft-irtf-cfrg-xmss-hash-based-signatures/) and 
 compatible with [XMSS reference code](https://github.com/joostrijneveld/xmss-reference).
 But this code is much faster than the reference code by using [SSE extention](https://github.com/minio/sha256-simd) and block level optimizations in sha256,
 with multi threadings.
@@ -62,24 +62,24 @@ Using the following test environment...
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 0.87 seconds to generating a keypair,
-* about 6.7 mS to sign a message,
-* about 720 uS to verify a signature.
+* about 0.70 seconds to generating a keypair,
+* about 6.1 mS to sign a message,
+* about 460 uS to verify a signature.
 
 For XMSS-SHA2_16_256, it takes 
 
-* about 55 seconds to generating a keypair,
-* about 7.2 mS to sign a message,
-* about 680 uS to verify a signature.
+* about 44 seconds to generating a keypair,
+* about 7.1 mS to sign a message,
+* about 530 uS to verify a signature.
 
 
 ```
-BenchmarkXMSS10-2       	       2	 871073106 ns/op
-BenchmarkXMSS10Sign-2   	     200	   6680257 ns/op
-BenchmarkXMSS10Veri-2   	    2000	    716316 ns/op
-BenchmarkXMSS16-2       	       1	54495501572 ns/op
-BenchmarkXMSS16Sign-2   	     200	   7239790 ns/op
-BenchmarkXMSS16Veri-2   	    2000	    677960 ns/op
+BenchmarkXMSS10-2       	       2	 695110207 ns/op
+BenchmarkXMSS10Sign-2   	     300	   6107834 ns/op
+BenchmarkXMSS10Veri-2   	    3000	    456179 ns/op
+BenchmarkXMSS16-2       	       1	43752799025 ns/op
+BenchmarkXMSS16Sign-2   	     300	   7059517 ns/op
+BenchmarkXMSS16Veri-2   	    3000	    525392 ns/op
 ```
 
 on DIGNO M KYL22(Android Smartphone):
@@ -94,14 +94,14 @@ on DIGNO M KYL22(Android Smartphone):
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 9.1 seconds to generating a keypair,
+* about 9.2 seconds to generating a keypair,
 * about 52 mS to sign a message,
-* about 4.4 mS to verify a signature.
+* about 4.1 mS to verify a signature.
 
 ```
-BenchmarkXMSS10     	       1	9140479008 ns/op
-BenchmarkXMSS10Sign 	     100	  51787360 ns/op
-BenchmarkXMSS10Veri 	     300	   4368742 ns/op
+BenchmarkXMSS10     	       1	9248567950 ns/op
+BenchmarkXMSS10Sign 	     100	  51699545 ns/op
+BenchmarkXMSS10Veri 	     300	   4088763 ns/op
 ```
 
 on a cloud server:
@@ -114,27 +114,28 @@ on a cloud server:
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 0.46 seconds to generating a keypair,
-* about 4.5 mS to sign a message,
-* about 450 uS to verify a signature.
+* about 170 mS to generating a keypair,
+* about 3.9 mS to sign a message,
+* about 420 uS to verify a signature.
 
 For XMSS-SHA2_16_256, it takes 
 
-* about  29 seconds to generating a keypair,
-* about  4.4 mS to sign a message,
-* about  510 uS to verify a signature.
+* about  8.8 seconds to generating a keypair,
+* about  4.1 mS to sign a message,
+* about  440 uS to verify a signature.
 
 
 For XMSS-SHA2_20_256, it takes 
-about  8.5 minutes to generating a keypair,
+about  4.0 minutes to generating a keypair,
 
 
 ```
-BenchmarkXMSS10-16        	       3	 461776815 ns/op
-BenchmarkXMSS10Sign-16    	     500	   4457839 ns/op
-BenchmarkXMSS10Veri-16    	    3000	    453052 ns/op
-BenchmarkXMSS16-16        	       1	29257509692 ns/op
-BenchmarkXMSS16Sign-16    	     500	   4250762 ns/op
-BenchmarkXMSS16Veri-16    	    3000	    492381 ns/op
-BenchmarkXMSS20-16        	       1	510150155087 ns/op
+BenchmarkXMSS10-16        	      10	 169356822 ns/op
+BenchmarkXMSS10Sign-16    	     500	   3932377 ns/op
+BenchmarkXMSS10Veri-16    	    5000	    421385 ns/op
+BenchmarkXMSS16-16        	       1	8792942533 ns/op
+BenchmarkXMSS16Sign-16    	     500	   4104281 ns/op
+BenchmarkXMSS16Veri-16    	    5000	    441616 ns/op
+BenchmarkXMSS20-16        	       1	238817500311 ns/op
+
 ```
