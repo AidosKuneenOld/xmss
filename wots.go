@@ -24,6 +24,8 @@ import (
 	"runtime"
 	"sync"
 	"unsafe"
+
+	"github.com/AidosKuneen/numcpu"
 )
 
 const (
@@ -73,7 +75,7 @@ func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
 
 func goChain(p *prf, addrs addr, fchain func(i int, a addr)) {
 	var wg sync.WaitGroup
-	ncpu := numCPU()
+	ncpu := numcpu.NumCPU()
 	nprev := runtime.GOMAXPROCS(ncpu)
 	nitem := wlen/ncpu + 1
 	for i := 0; i < ncpu; i++ {
