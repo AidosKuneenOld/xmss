@@ -23,11 +23,16 @@ package xmss
 import (
 	"bytes"
 	"encoding/hex"
+	"runtime"
 	"testing"
+
+	"github.com/AidosKuneen/numcpu"
 )
 
 func TestXMSS(t *testing.T) {
-	t.Log(numCPU())
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
+	t.Log(n)
 	skseed, err := hex.DecodeString("b041bf7ca73cc7905aadc1b6460da2e50206652e3d57a61487beb09664da308d")
 	if err != nil {
 		t.Fatal(err)
@@ -105,9 +110,12 @@ func TestXMSS(t *testing.T) {
 	if !Verify(sig2, msg2, mer.priv.root) {
 		t.Error("XMSS verification 2 is incorrect")
 	}
+	runtime.GOMAXPROCS(npref)
 }
 
 func TestXMSS2(t *testing.T) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -122,9 +130,12 @@ func TestXMSS2(t *testing.T) {
 		}
 		pre = sig
 	}
+	runtime.GOMAXPROCS(npref)
 }
 
 func TestXMSS3(t *testing.T) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -133,8 +144,11 @@ func TestXMSS3(t *testing.T) {
 	if Verify(sig, msg, mer.priv.root) {
 		t.Error("XMSS sig is incorrect")
 	}
+	runtime.GOMAXPROCS(npref)
 }
 func TestXMSS4(t *testing.T) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(2, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -146,8 +160,11 @@ func TestXMSS4(t *testing.T) {
 	if Verify(sig, msg, mer.priv.root) {
 		t.Error("XMSS sig is incorrect")
 	}
+	runtime.GOMAXPROCS(npref)
 }
 func TestXMSS16(t *testing.T) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(16, seed)
 	msg := []byte("This is a test for XMSS height=16.")
@@ -155,9 +172,12 @@ func TestXMSS16(t *testing.T) {
 	if !Verify(sig, msg, mer.priv.root) {
 		t.Error("XMSS sig is incorrect")
 	}
+	runtime.GOMAXPROCS(npref)
 }
 
 func TestXMSSMarshal(t *testing.T) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS height=16.")
@@ -176,14 +196,20 @@ func TestXMSSMarshal(t *testing.T) {
 	if !bytes.Equal(sig, sig2) {
 		t.Error("invlaid marshal")
 	}
+	runtime.GOMAXPROCS(npref)
 }
 
 func BenchmarkXMSS16(b *testing.B) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	b.ResetTimer()
 	_ = NewMerkle(16, seed)
+	runtime.GOMAXPROCS(npref)
 }
 func BenchmarkXMSS16Sign(b *testing.B) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(16, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -191,8 +217,11 @@ func BenchmarkXMSS16Sign(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = mer.Sign(msg)
 	}
+	runtime.GOMAXPROCS(npref)
 }
 func BenchmarkXMSS16Veri(b *testing.B) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(16, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -201,22 +230,31 @@ func BenchmarkXMSS16Veri(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Verify(sig, msg, mer.priv.root)
 	}
+	runtime.GOMAXPROCS(npref)
 }
 
 func BenchmarkXMSS20(b *testing.B) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	b.ResetTimer()
 	_ = NewMerkle(20, seed)
+	runtime.GOMAXPROCS(npref)
 }
 
 func BenchmarkXMSS10(b *testing.B) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = NewMerkle(10, seed)
 	}
+	runtime.GOMAXPROCS(npref)
 }
 func BenchmarkXMSS10Sign(b *testing.B) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -224,8 +262,11 @@ func BenchmarkXMSS10Sign(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = mer.Sign(msg)
 	}
+	runtime.GOMAXPROCS(npref)
 }
 func BenchmarkXMSS10Veri(b *testing.B) {
+	n := numcpu.NumCPU()
+	npref := runtime.GOMAXPROCS(n)
 	seed := generateSeed()
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -234,4 +275,5 @@ func BenchmarkXMSS10Veri(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Verify(sig, msg, mer.priv.root)
 	}
+	runtime.GOMAXPROCS(npref)
 }

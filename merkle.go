@@ -25,8 +25,6 @@ import (
 	"math"
 	"runtime"
 	"sync"
-
-	"github.com/AidosKuneen/numcpu"
 )
 
 //NH represents a node in a merkle tree.
@@ -242,8 +240,7 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	}
 
 	var wg sync.WaitGroup
-	ncpu := numcpu.NumCPU()
-	nprev := runtime.GOMAXPROCS(ncpu)
+	ncpu := runtime.GOMAXPROCS(-1)
 	nproc := uint32(math.Log2(float64(ncpu)))
 	if ncpu != (1 << nproc) {
 		nproc++
@@ -296,7 +293,6 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	}
 	s.update(1, m.priv)
 	copy(m.priv.root, s.top().node)
-	runtime.GOMAXPROCS(nprev)
 	return m
 }
 
