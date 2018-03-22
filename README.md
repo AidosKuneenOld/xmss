@@ -53,7 +53,7 @@ are required to compile.
 Using the following test environment...
 
 ```
-* Compiler: go version go1.9.1 linux/amd64
+* Compiler: go version go1.10 linux/amd64
 * Kernel: Linux WS777 4.13.5-1-ARCH #1 SMP PREEMPT Fri Oct 6 09:58:47 CEST 2017 x86_64 GNU/Linux
 * CPU:  Celeron(R) CPU G1840 @ 2.80GHz 
 * Memory: 8 GB
@@ -62,30 +62,34 @@ Using the following test environment...
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 0.70 seconds to generating a keypair,
-* about 6.1 mS to sign a message,
-* about 460 uS to verify a signature.
+* about 760 seconds to generating a keypair,
+* about 6.3 mS to sign a message,
+* about 490 uS to verify a signature.
 
 For XMSS-SHA2_16_256, it takes 
 
-* about 44 seconds to generating a keypair,
-* about 7.1 mS to sign a message,
-* about 530 uS to verify a signature.
+* about 50 seconds to generating a keypair,
+* about 8.3 mS to sign a message,
+* about 520 uS to verify a signature.
 
+
+For XMSS-SHA2_20_256, it takes 
+about  14 minutes to generating a keypair,
 
 ```
-BenchmarkXMSS10-2       	       2	 695110207 ns/op
-BenchmarkXMSS10Sign-2   	     300	   6107834 ns/op
-BenchmarkXMSS10Veri-2   	    3000	    456179 ns/op
-BenchmarkXMSS16-2       	       1	43752799025 ns/op
-BenchmarkXMSS16Sign-2   	     300	   7059517 ns/op
-BenchmarkXMSS16Veri-2   	    3000	    525392 ns/op
+BenchmarkXMSS10-2                      2         759714114 ns/op
+BenchmarkXMSS10Sign-2                300           6281026 ns/op
+BenchmarkXMSS10Veri-2               3000            487012 ns/op
+BenchmarkXMSS16-2                      1        49811815344 ns/op
+BenchmarkXMSS16Sign-2                200           8270566 ns/op
+BenchmarkXMSS16Veri-2               2000            518886 ns/op
+BenchmarkXMSS20-2                      1        820250400243 ns/op
 ```
 
 On DIGNO M KYL22(Android Smartphone):
 
 ```
-* Compiler: go version go1.9.1 linux/arm
+* Compiler: go version go1.10 linux/arm
 * OS: 	Android 4.2.2
 * CPU:	Qualcomm Snapdragon 800 MSM8974 2.2GHz (quad core)
 * Memory: 2 GB
@@ -94,14 +98,14 @@ On DIGNO M KYL22(Android Smartphone):
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 2.4 seconds to generating a keypair,
+* about 2.9 seconds to generating a keypair,
 * about 34 mS to sign a message,
-* about 3.5 mS to verify a signature.
+* about 4.5 mS to verify a signature.
 
 ```
-BenchmarkXMSS10-2       	       1	2449496769 ns/op
-BenchmarkXMSS10Sign-2   	     100	  34030373 ns/op
-BenchmarkXMSS10Veri-2   	     500	   3450896 ns/op
+BenchmarkXMSS10                1        2906321328 ns/op
+BenchmarkXMSS10Sign          100          34440405 ns/op
+BenchmarkXMSS10Veri          300           4496049 ns/op
 ```
 
 On a cloud server:
@@ -115,27 +119,27 @@ On a cloud server:
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 170 mS to generating a keypair,
-* about 3.9 mS to sign a message,
-* about 420 uS to verify a signature.
+* about 190 mS to generating a keypair,
+* about 4.9 mS to sign a message,
+* about 410 uS to verify a signature.
 
 For XMSS-SHA2_16_256, it takes 
 
-* about  8.8 seconds to generating a keypair,
-* about  4.1 mS to sign a message,
-* about  440 uS to verify a signature.
+* about  9.0 seconds to generating a keypair,
+* about  5.3 mS to sign a message,
+* about  420 uS to verify a signature.
 
 
 For XMSS-SHA2_20_256, it takes 
-about  4.0 minutes to generating a keypair,
+about  3.1 minutes to generating a keypair,
 
 
 ```
-BenchmarkXMSS10-16        	      10	 169356822 ns/op
-BenchmarkXMSS10Sign-16    	     500	   3932377 ns/op
-BenchmarkXMSS10Veri-16    	    5000	    421385 ns/op
-BenchmarkXMSS16-16        	       1	8792942533 ns/op
-BenchmarkXMSS16Sign-16    	     500	   4104281 ns/op
-BenchmarkXMSS16Veri-16    	    5000	    441616 ns/op
-BenchmarkXMSS20-16        	       1	238817500311 ns/op
+BenchmarkXMSS10-16        	      10	 180479693 ns/op
+BenchmarkXMSS10Sign-16    	     300	   4939994 ns/op
+BenchmarkXMSS10Veri-16    	    5000	    411160 ns/op
+BenchmarkXMSS16-16        	       1	9032432802 ns/op
+BenchmarkXMSS16Sign-16    	     300	   5364563 ns/op
+BenchmarkXMSS16Veri-16    	    3000	    419544 ns/op
+BenchmarkXMSS20-16        	       1  187203367087 ns/op
 ```

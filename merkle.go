@@ -21,10 +21,13 @@
 package xmss
 
 import (
+	"crypto/hmac"
 	"encoding/json"
 	"math"
 	"runtime"
 	"sync"
+
+	sha256 "github.com/AidosKuneen/sha256-simd"
 )
 
 //NH represents a node in a merkle tree.
@@ -216,13 +219,15 @@ type Merkle struct {
 
 //NewMerkle makes Merkle struct from height and private seed.
 func NewMerkle(h uint32, seed []byte) *Merkle {
-	p := newPRF(seed)
-	wotsSeed := make([]byte, 32)
-	msgSeed := make([]byte, 32)
-	pubSeed := make([]byte, 32)
-	p.sumInt(1, wotsSeed)
-	p.sumInt(2, msgSeed)
-	p.sumInt(3, pubSeed)
+	mac := hmac.New(sha256.New, seed)
+	mac.Write([]byte{1})
+	wotsSeed := mac.Sum(nil)
+	mac.Reset()
+	mac.Write([]byte{2})
+	msgSeed := mac.Sum(nil)
+	mac.Reset()
+	mac.Write([]byte{3})
+	pubSeed := mac.Sum(nil)
 	return newMerkle(h, wotsSeed, msgSeed, pubSeed)
 }
 func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {

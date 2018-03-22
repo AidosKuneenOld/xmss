@@ -41,9 +41,9 @@ type pubkey struct {
 //MarshalJSON  marshals PrivKey into valid JSON.
 func (x *PrivKey) MarshalJSON() ([]byte, error) {
 	s := struct {
-		MsgSeed  []byte
-		WotsSeed []byte
-		PubSeed  []byte
+		MsgSeed  []byte //SK_PRF in draft, used to get hash of index(randomness r in draft) when signing by XMSS.
+		WotsSeed []byte //S in draft, used to generate private key elements of WOTS.
+		PubSeed  []byte //SEED in draft , used to make public keys of WOTS.
 		Root     []byte
 	}{
 		MsgSeed:  x.msgPRF.seed,
