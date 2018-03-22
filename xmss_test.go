@@ -23,6 +23,7 @@ package xmss
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"runtime"
 	"testing"
 
@@ -182,14 +183,15 @@ func TestXMSSMarshal(t *testing.T) {
 	mer := NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS height=16.")
 	mer.Sign(msg)
-	dat, err := mer.MarshalJSON()
+	state := mer.GetStates()
+	dat, err := json.Marshal(state)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("marshalled Merkle", string(dat))
 	sig := mer.Sign(msg)
 	mer2 := Merkle{}
-	if err = mer2.UnmarshalJSON(dat); err != nil {
+	if err = json.Unmarshal(dat, &mer2); err != nil {
 		t.Error(err)
 	}
 	sig2 := mer2.Sign(msg)

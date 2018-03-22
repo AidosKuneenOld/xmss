@@ -301,44 +301,35 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	return m
 }
 
-//MarshalJSON  marshals Merkle into valid JSON.
-func (m *Merkle) MarshalJSON() ([]byte, error) {
-	s := struct {
-		Leaf   uint32
-		Height uint32
-		Auth   [][]byte
-		Priv   *PrivKey
-		Stacks []*Stack
-	}{
+//States makes statates in merkle public.
+type States struct {
+	Leaf   uint32
+	Height uint32
+	Auth   [][]byte
+	Priv   *PrivKey
+	Stacks []*Stack
+}
+
+//GetStates  get states in the merkle.
+func (m *Merkle) GetStates() *States {
+	return &States{
 		Leaf:   m.Leaf,
 		Height: m.Height,
 		Auth:   m.auth,
 		Priv:   m.priv,
 		Stacks: m.stacks,
 	}
-
-	return json.Marshal(&s)
 }
 
-//UnmarshalJSON  unmarshals JSON to PrivKey.
-func (m *Merkle) UnmarshalJSON(b []byte) error {
-	s := struct {
-		Leaf   uint32
-		Height uint32
-		Auth   [][]byte
-		Priv   *PrivKey
-		Stacks []*Stack
-	}{}
-	err := json.Unmarshal(b, &s)
-	if err != nil {
-		return err
+//FromStates makes Merkle from State struct.
+func FromStates(s *States) *Merkle {
+	return &Merkle{
+		Leaf:   s.Leaf,
+		Height: s.Height,
+		auth:   s.Auth,
+		priv:   s.Priv,
+		stacks: s.Stacks,
 	}
-	m.Leaf = s.Leaf
-	m.Height = s.Height
-	m.auth = s.Auth
-	m.priv = s.Priv
-	m.stacks = s.Stacks
-	return nil
 }
 
 //PublicKey returns public key (merkle root) of XMSS
