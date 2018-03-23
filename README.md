@@ -42,10 +42,12 @@ are required to compile.
 		log.Println("signature is invalid")
 	}
 	//output Merkle contents to json
-	dat, err := mer.MarshalJSON()
+	state := mer.GetStates()
+	dat, err := json.Marshal(state)
 	//convert json to Merkle
-	mer2 := xmss.Merkle{}
-    err := mer2.UnmarshalJSON(dat)
+	state2 := merkle.States{}
+	err = json.Unmarshal(dat, &state2)
+	mer2 := FromStates(&state2)
 ```
 
 ## Performance

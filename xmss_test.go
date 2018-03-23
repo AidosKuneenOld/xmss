@@ -190,10 +190,11 @@ func TestXMSSMarshal(t *testing.T) {
 	}
 	t.Log("marshalled Merkle", string(dat))
 	sig := mer.Sign(msg)
-	mer2 := Merkle{}
-	if err = json.Unmarshal(dat, &mer2); err != nil {
+	state2 := States{}
+	if err = json.Unmarshal(dat, &state2); err != nil {
 		t.Error(err)
 	}
+	mer2 := FromStates(&state2)
 	sig2 := mer2.Sign(msg)
 	if !bytes.Equal(sig, sig2) {
 		t.Error("invlaid marshal")
