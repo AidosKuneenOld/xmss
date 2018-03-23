@@ -45,9 +45,9 @@ are required to compile.
 	state := mer.GetStates()
 	dat, err := json.Marshal(state)
 	//convert json to Merkle
-	state2 := merkle.States{}
+	state2 := xmss.States{}
 	err = json.Unmarshal(dat, &state2)
-	mer2 := FromStates(&state2)
+	mer2 := xmss.FromStates(&state2)
 ```
 
 ## Performance
