@@ -24,50 +24,71 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+
+	"github.com/vmihailenco/msgpack"
 )
 
 //PrivKey is a private key of XMSS.
 type PrivKey struct {
-	msgPRF  *prf
-	wotsPRF *prf
-	pubPRF  *prf
+	msgPRF  *prf //SK_PRF in draft, used to get hash of index(randomness r in draft) when signing by XMSS.
+	wotsPRF *prf //S in draft, used to generate private key elements of WOTS.
+	pubPRF  *prf //SEED in draft , used to make public keys of WOTS.
 	root    []byte
 }
 type pubkey struct {
 	root []byte
 	prf  *prf
 }
+type privkey struct {
+	MsgSeed  []byte
+	WotsSeed []byte
+	PubSeed  []byte
+	Root     []byte
+}
 
-//MarshalJSON  marshals PrivKey into valid JSON.
-func (x *PrivKey) MarshalJSON() ([]byte, error) {
-	s := struct {
-		MsgSeed  []byte //SK_PRF in draft, used to get hash of index(randomness r in draft) when signing by XMSS.
-		WotsSeed []byte //S in draft, used to generate private key elements of WOTS.
-		PubSeed  []byte //SEED in draft , used to make public keys of WOTS.
-		Root     []byte
-	}{
+func (x *PrivKey) exports() *privkey {
+	return &privkey{
 		MsgSeed:  x.msgPRF.seed,
 		WotsSeed: x.wotsPRF.seed,
 		PubSeed:  x.pubPRF.seed,
 		Root:     x.root,
 	}
-	return json.Marshal(&s)
 }
-
-//UnmarshalJSON  unmarshals JSON to PrivKey.
-func (x *PrivKey) UnmarshalJSON(b []byte) error {
-	s := struct {
-		MsgSeed  []byte
-		WotsSeed []byte
-		PubSeed  []byte
-		Root     []byte
-	}{}
-	err := json.Unmarshal(b, &s)
+func (x *PrivKey) imports(s *privkey) {
 	x.msgPRF = newPRF(s.MsgSeed)
 	x.wotsPRF = newPRF(s.WotsSeed)
 	x.pubPRF = newPRF(s.PubSeed)
 	x.root = s.Root
+}
+
+//MarshalJSON  marshals PrivKey into valid JSON.
+func (x *PrivKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(x.exports())
+}
+
+//UnmarshalJSON  unmarshals JSON to PrivKey.
+func (x *PrivKey) UnmarshalJSON(b []byte) error {
+	s := privkey{}
+	err := json.Unmarshal(b, &s)
+	if err == nil {
+		x.imports(&s)
+	}
 	return err
+}
+
+//EncodeMsgpack  marshals PrivKey into valid msgpack.
+func (x *PrivKey) EncodeMsgpack(enc *msgpack.Encoder) error {
+	return enc.Encode(x.exports())
+}
+
+//DecodeMsgpack  unmarshals JSON to msgpack.
+func (x *PrivKey) DecodeMsgpack(dec *msgpack.Decoder) error {
+	s := privkey{}
+	if err := dec.Decode(&s); err != nil {
+		return err
+	}
+	x.imports(&s)
+	return nil
 }
 
 func (x *PrivKey) newWotsPrivKey(addrs addr, priv wotsPrivKey) {

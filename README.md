@@ -33,6 +33,8 @@ are required to compile.
 
 ```go
 	import "github.com/AidosKuneen/xmss"
+	import	"github.com/vmihailenco/msgpack"
+
 	seed := []byte{0x01,0x02...}
 	mer := xmss.NewMerkle(10, seed)
 	msg := []byte("This is a test for XMSS.")
@@ -42,12 +44,18 @@ are required to compile.
 		log.Println("signature is invalid")
 	}
 	//output Merkle contents to json
-	state := mer.GetStates()
-	dat, err := json.Marshal(state)
+	dat, err := json.Marshal(mer)
 	//convert json to Merkle
-	state2 := xmss.States{}
-	err = json.Unmarshal(dat, &state2)
-	mer2 := xmss.FromStates(&state2)
+	var mer2 xmss.Merkle
+	err = json.Unmarshal(dat, &mer2)
+
+//output Merkle contents to json
+	mdat, err := msgpack.Marshal(mer)
+	//convert json to Merkle
+	var mmer xmss.Merkle
+	err = msgpack.Unmarshal(mdat, &mmer)
+
+
 ```
 
 ## Performance
@@ -64,7 +72,7 @@ Using the following test environment...
 
 For XMSS-SHA2_10_256, it takes 
 
-* about 760 seconds to generating a keypair,
+* about 760 mS to generating a keypair,
 * about 6.3 mS to sign a message,
 * about 490 uS to verify a signature.
 

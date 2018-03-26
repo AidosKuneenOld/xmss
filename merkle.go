@@ -28,6 +28,7 @@ import (
 	"sync"
 
 	sha256 "github.com/AidosKuneen/sha256-simd"
+	"github.com/vmihailenco/msgpack"
 )
 
 //NH represents a node in a merkle tree.
@@ -37,32 +38,54 @@ type NH struct {
 	index  uint32
 }
 
-//MarshalJSON  marshals NH into valid JSON.
-func (nn *NH) MarshalJSON() ([]byte, error) {
-	sr := struct {
-		Node   []byte
-		Height uint32
-		Index  uint32
-	}{
+type nh struct {
+	Node   []byte
+	Height uint32
+	Index  uint32
+}
+
+func (nn *NH) exports() *nh {
+	return &nh{
 		Node:   nn.node,
 		Height: nn.height,
 		Index:  nn.index,
 	}
-	return json.Marshal(&sr)
 }
-
-//UnmarshalJSON  unmarshals NH to PrivKey.
-func (nn *NH) UnmarshalJSON(b []byte) error {
-	sr := struct {
-		Node   []byte
-		Height uint32
-		Index  uint32
-	}{}
-	err := json.Unmarshal(b, &sr)
+func (nn *NH) imports(sr *nh) {
 	nn.node = sr.Node
 	nn.height = sr.Height
 	nn.index = sr.Index
-	return err
+}
+
+//MarshalJSON  marshals NH into valid JSON.
+func (nn *NH) MarshalJSON() ([]byte, error) {
+	return json.Marshal(nn.exports())
+}
+
+//UnmarshalJSON  unmarshals NH .
+func (nn *NH) UnmarshalJSON(b []byte) error {
+	var sr nh
+	err := json.Unmarshal(b, &sr)
+	if err != nil {
+		return err
+	}
+	nn.imports(&sr)
+	return nil
+}
+
+//EncodeMsgpack  marshals NH into valid msgpack.
+func (nn *NH) EncodeMsgpack(enc *msgpack.Encoder) error {
+	return enc.Encode(nn.exports())
+}
+
+//DecodeMsgpack  unmarshals NH.
+func (nn *NH) DecodeMsgpack(dec *msgpack.Decoder) error {
+	var sr nh
+	if err := dec.Decode(&sr); err != nil {
+		return err
+	}
+	nn.imports(&sr)
+	return nil
 }
 
 //Stack is a stack to use in merkle traversing.
@@ -72,32 +95,55 @@ type Stack struct {
 	leaf   uint32
 }
 
-//MarshalJSON  marshals Stack into valid JSON.
-func (s *Stack) MarshalJSON() ([]byte, error) {
-	sr := struct {
-		Stack  []*NH
-		Height uint32
-		Leaf   uint32
-	}{
+type stack struct {
+	Stack  []*NH
+	Height uint32
+	Leaf   uint32
+}
+
+func (s *Stack) exports() *stack {
+	return &stack{
 		Stack:  s.stack,
 		Height: s.height,
 		Leaf:   s.leaf,
 	}
-	return json.Marshal(&sr)
 }
 
-//UnmarshalJSON  unmarshals Stack to PrivKey.
-func (s *Stack) UnmarshalJSON(b []byte) error {
-	sr := struct {
-		Stack  []*NH
-		Height uint32
-		Leaf   uint32
-	}{}
-	err := json.Unmarshal(b, &sr)
+func (s *Stack) imports(sr *stack) {
 	s.stack = sr.Stack
 	s.height = sr.Height
 	s.leaf = sr.Leaf
-	return err
+}
+
+//MarshalJSON  marshals Stack into valid JSON.
+func (s *Stack) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.exports())
+}
+
+//UnmarshalJSON  unmarshals Stack to JSON.
+func (s *Stack) UnmarshalJSON(b []byte) error {
+	var sr stack
+	err := json.Unmarshal(b, &sr)
+	if err != nil {
+		return err
+	}
+	s.imports(&sr)
+	return nil
+}
+
+//EncodeMsgpack  marshals Stack into valid msgpack.
+func (s *Stack) EncodeMsgpack(enc *msgpack.Encoder) error {
+	return enc.Encode(s.exports())
+}
+
+//DecodeMsgpack  unmarshals Stack to msgpack.
+func (s *Stack) DecodeMsgpack(dec *msgpack.Decoder) error {
+	var sr stack
+	if err := dec.Decode(&sr); err != nil {
+		return err
+	}
+	s.imports(&sr)
+	return nil
 }
 
 func (s *Stack) low() uint32 {
@@ -220,13 +266,19 @@ type Merkle struct {
 //NewMerkle makes Merkle struct from height and private seed.
 func NewMerkle(h uint32, seed []byte) *Merkle {
 	mac := hmac.New(sha256.New, seed)
-	mac.Write([]byte{1})
+	if _, err := mac.Write([]byte{1}); err != nil {
+		panic(err)
+	}
 	wotsSeed := mac.Sum(nil)
 	mac.Reset()
-	mac.Write([]byte{2})
+	if _, err := mac.Write([]byte{2}); err != nil {
+		panic(err)
+	}
 	msgSeed := mac.Sum(nil)
 	mac.Reset()
-	mac.Write([]byte{3})
+	if _, err := mac.Write([]byte{3}); err != nil {
+		panic(err)
+	}
 	pubSeed := mac.Sum(nil)
 	return newMerkle(h, wotsSeed, msgSeed, pubSeed)
 }
@@ -301,8 +353,7 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 	return m
 }
 
-//States makes statates in merkle public.
-type States struct {
+type merkle struct {
 	Leaf   uint32
 	Height uint32
 	Auth   [][]byte
@@ -310,9 +361,8 @@ type States struct {
 	Stacks []*Stack
 }
 
-//GetStates  get states in the merkle.
-func (m *Merkle) GetStates() *States {
-	return &States{
+func (m *Merkle) exports() *merkle {
+	return &merkle{
 		Leaf:   m.Leaf,
 		Height: m.Height,
 		Auth:   m.auth,
@@ -321,15 +371,42 @@ func (m *Merkle) GetStates() *States {
 	}
 }
 
-//FromStates makes Merkle from State struct.
-func FromStates(s *States) *Merkle {
-	return &Merkle{
-		Leaf:   s.Leaf,
-		Height: s.Height,
-		auth:   s.Auth,
-		priv:   s.Priv,
-		stacks: s.Stacks,
+func (m *Merkle) imports(s *merkle) {
+	m.Leaf = s.Leaf
+	m.Height = s.Height
+	m.auth = s.Auth
+	m.priv = s.Priv
+	m.stacks = s.Stacks
+}
+
+//MarshalJSON  marshals Merkle into valid JSON.
+func (m *Merkle) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.exports())
+}
+
+//UnmarshalJSON  unmarshals JSON to Merkle.
+func (m *Merkle) UnmarshalJSON(b []byte) error {
+	s := merkle{}
+	err := json.Unmarshal(b, &s)
+	if err == nil {
+		m.imports(&s)
 	}
+	return err
+}
+
+//EncodeMsgpack  marshals Merkle into valid JSON.
+func (m *Merkle) EncodeMsgpack(enc *msgpack.Encoder) error {
+	return enc.Encode(m.exports())
+}
+
+//UnmarshalMsgpack  unmarshals JSON to Merkle.
+func (m *Merkle) DecodeMsgpack(dec *msgpack.Decoder) error {
+	s := merkle{}
+	err := dec.Decode(&s)
+	if err == nil {
+		m.imports(&s)
+	}
+	return err
 }
 
 //PublicKey returns public key (merkle root) of XMSS
