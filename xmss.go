@@ -68,7 +68,7 @@ func (x *PrivKey) MarshalJSON() ([]byte, error) {
 
 //UnmarshalJSON  unmarshals JSON to PrivKey.
 func (x *PrivKey) UnmarshalJSON(b []byte) error {
-	s := privkey{}
+	var s privkey
 	err := json.Unmarshal(b, &s)
 	if err == nil {
 		x.imports(&s)
@@ -83,7 +83,7 @@ func (x *PrivKey) EncodeMsgpack(enc *msgpack.Encoder) error {
 
 //DecodeMsgpack  unmarshals JSON to msgpack.
 func (x *PrivKey) DecodeMsgpack(dec *msgpack.Decoder) error {
-	s := privkey{}
+	var s privkey
 	if err := dec.Decode(&s); err != nil {
 		return err
 	}

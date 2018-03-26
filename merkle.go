@@ -386,7 +386,7 @@ func (m *Merkle) MarshalJSON() ([]byte, error) {
 
 //UnmarshalJSON  unmarshals JSON to Merkle.
 func (m *Merkle) UnmarshalJSON(b []byte) error {
-	s := merkle{}
+	var s merkle
 	err := json.Unmarshal(b, &s)
 	if err == nil {
 		m.imports(&s)
@@ -399,9 +399,9 @@ func (m *Merkle) EncodeMsgpack(enc *msgpack.Encoder) error {
 	return enc.Encode(m.exports())
 }
 
-//UnmarshalMsgpack  unmarshals JSON to Merkle.
+//DecodeMsgpack  unmarshals JSON to Merkle.
 func (m *Merkle) DecodeMsgpack(dec *msgpack.Decoder) error {
-	s := merkle{}
+	var s merkle
 	err := dec.Decode(&s)
 	if err == nil {
 		m.imports(&s)
