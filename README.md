@@ -49,9 +49,9 @@ are required to compile.
 	var mer2 xmss.Merkle
 	err = json.Unmarshal(dat, &mer2)
 
-//output Merkle contents to json
+//output Merkle contents to msgpack format
 	mdat, err := msgpack.Marshal(mer)
-	//convert json to Merkle
+	//convert msgapck bin to Merkle
 	var mmer xmss.Merkle
 	err = msgpack.Unmarshal(mdat, &mmer)
 
