@@ -66,13 +66,13 @@ func TestXMSS(t *testing.T) {
 	if !bytes.Equal(sig, csig) {
 		t.Error(hex.EncodeToString(sig))
 		t.Error("XMSS sig is incorrect")
-		csigstr, err := bytes2sig(csig)
-		if err != nil {
-			t.Error(err)
+		csigstr, err2 := bytes2sig(csig)
+		if err2 != nil {
+			t.Error(err2)
 		}
-		sigstr, err := bytes2sig(sig)
-		if err != nil {
-			t.Error(err)
+		sigstr, err2 := bytes2sig(sig)
+		if err2 != nil {
+			t.Error(err2)
 		}
 		if csigstr.idx != sigstr.idx {
 			t.Error("sig idx is incorrect")

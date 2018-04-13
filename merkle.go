@@ -319,7 +319,6 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte, layer uint32, tree u
 		nproc++
 	}
 	if h <= nproc {
-		ncpu = 1
 		nproc = 0
 	}
 	ntop := make([]*NH, (1<<nproc)-1)
