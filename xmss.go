@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 
 	"github.com/vmihailenco/msgpack"
 )
@@ -34,10 +35,6 @@ type PrivKey struct {
 	wotsPRF *prf //S in draft, used to generate private key elements of WOTS.
 	pubPRF  *prf //SEED in draft , used to make public keys of WOTS.
 	root    []byte
-}
-type pubkey struct {
-	root []byte
-	prf  *prf
 }
 type privkey struct {
 	MsgSeed  []byte
@@ -81,7 +78,7 @@ func (x *PrivKey) EncodeMsgpack(enc *msgpack.Encoder) error {
 	return enc.Encode(x.exports())
 }
 
-//DecodeMsgpack  unmarshals JSON to msgpack.
+//DecodeMsgpack  unmarshals msgpack to PrivKey.
 func (x *PrivKey) DecodeMsgpack(dec *msgpack.Decoder) error {
 	var s privkey
 	if err := dec.Decode(&s); err != nil {
@@ -137,12 +134,16 @@ func (pk wotsPubKey) ltree(p *prf, addrs addr) []byte {
 	return pk[0]
 }
 
+type xmssSigBody struct {
+	sig  wotsSig
+	auth [][]byte
+}
+
 type xmssSig struct {
 	idx  uint32
 	seed []byte
 	r    []byte
-	sig  wotsSig
-	auth [][]byte
+	*xmssSigBody
 }
 
 func (x *xmssSig) bytes() []byte {
@@ -151,31 +152,50 @@ func (x *xmssSig) bytes() []byte {
 	binary.BigEndian.PutUint32(sig, x.idx)
 	copy(sig[4:], x.seed)
 	copy(sig[4+n:], x.r)
+	sigBody := x.xmssSigBody.bytes()
+	copy(sig[4+n+n:], sigBody)
+	return sig
+}
+
+func (x *xmssSigBody) bytes() []byte {
+	sigSize := wlen*n + len(x.auth)*n
+	sig := make([]byte, sigSize)
 	for i, s := range x.sig {
-		copy(sig[4+n+n+i*n:], s)
+		copy(sig[i*n:], s)
 	}
 	for i, s := range x.auth {
-		copy(sig[4+n+n+wlen*n+i*n:], s)
+		copy(sig[wlen*n+i*n:], s)
 	}
 	return sig
 }
 
-func bytes2sig(b []byte) *xmssSig {
+func bytes2sig(b []byte) (*xmssSig, error) {
 	height := (len(b) - (4 + n + n + wlen*n)) >> 5
+	if height <= 0 {
+		return nil, errors.New("invalid length of bytes")
+	}
+	body := bytes2sigBody(b[4+n+n:], height)
 	sig := &xmssSig{
-		idx:  binary.BigEndian.Uint32(b),
-		seed: b[4 : 4+n],
-		r:    b[4+n : 4+n+n],
+		idx:         binary.BigEndian.Uint32(b),
+		seed:        b[4 : 4+n],
+		r:           b[4+n : 4+n+n],
+		xmssSigBody: body,
+	}
+	return sig, nil
+}
+
+func bytes2sigBody(b []byte, height int) *xmssSigBody {
+	body := &xmssSigBody{
 		sig:  make([][]byte, wlen),
 		auth: make([][]byte, height),
 	}
 	for i := 0; i < wlen; i++ {
-		sig.sig[i] = b[4+n+n+i*n : 4+n+n+(i+1)*n]
+		body.sig[i] = b[i*n : (i+1)*n]
 	}
 	for i := 0; i < height; i++ {
-		sig.auth[i] = b[4+n+n+n*wlen+n*i : 4+n+n+n*wlen+n*(i+1)]
+		body.auth[i] = b[n*wlen+n*i : n*wlen+n*(i+1)]
 	}
-	return sig
+	return body
 }
 
 //Sign signs by XMSS with MerkleTree.
@@ -187,57 +207,72 @@ func (m *Merkle) Sign(msg []byte) []byte {
 	copy(r[32:], m.priv.root)
 	copy(r[64:], index)
 	hmsg := hashMsg(r, msg)
+	sigBody := m.sign(hmsg)
+	sig := &xmssSig{
+		idx:         m.Leaf,
+		seed:        m.priv.pubPRF.seed,
+		r:           r[:32],
+		xmssSigBody: sigBody,
+	}
+	result := sig.bytes()
+	m.Traverse() //never relocate the line to above
+	return result
+}
+
+func (m *Merkle) sign(hmsg []byte) *xmssSigBody {
 	wsk := make(wotsPrivKey, wlen)
 	for i := range wsk {
 		wsk[i] = make([]byte, 32)
 	}
 	addrs := make(addr, 32)
+	addrs.set(adrLayer, m.layer)
+	addrs.setTree(m.tree)
 	addrs.set(adrOTS, m.Leaf)
 	m.priv.newWotsPrivKey(addrs, wsk)
 	sig := wsk.sign(hmsg, m.priv.pubPRF, addrs)
-	xs := xmssSig{
-		idx:  m.Leaf,
-		seed: m.priv.pubPRF.seed,
-		r:    r[:32],
+	return &xmssSigBody{
 		sig:  sig,
 		auth: m.auth,
 	}
-	out := xs.bytes()
-	m.Traverse()
-	return out
 }
 
 //Verify verifies msg by XMSS.
 func Verify(bsig, msg, bpk []byte) bool {
-	sig := bytes2sig(bsig)
-	pk := pubkey{
-		root: bpk,
-		prf:  newPRF(sig.seed),
+	sig, err := bytes2sig(bsig)
+	if err != nil {
+		return false
 	}
+	prf := newPRF(sig.seed)
 	r := make([]byte, 32*3)
 	copy(r, sig.r)
-	copy(r[32:], pk.root)
+	copy(r[32:], bpk)
 	binary.BigEndian.PutUint32(r[64+28:], sig.idx)
 	hmsg := hashMsg(r, msg)
+	root := rootFromSig(sig.idx, hmsg, sig.xmssSigBody, prf, 0, 0)
+	return bytes.Equal(root, bpk)
+}
+
+func rootFromSig(idx uint32, hmsg []byte, body *xmssSigBody, prf *prf, layer uint32, tree uint64) []byte {
 	addrs := make(addr, 32)
-	addrs.set(adrOTS, sig.idx)
-	pkOTS := sig.sig.pubkey(hmsg, pk.prf, addrs)
+	addrs.set(adrLayer, layer)
+	addrs.setTree(tree)
+	addrs.set(adrOTS, idx)
+	pkOTS := body.sig.pubkey(hmsg, prf, addrs)
 	addrs.set(adrType, 1)
-	addrs.set(adrLtree, sig.idx)
-	node0 := pkOTS.ltree(pk.prf, addrs)
+	addrs.set(adrLtree, idx)
+	node0 := pkOTS.ltree(prf, addrs)
 	addrs.set(adrType, 2)
 	addrs.set(adrLtree, 0)
 	var k uint32
-	idx := sig.idx
-	for k = 0; k < uint32(len(sig.auth)); k++ {
+	for k = 0; k < uint32(len(body.auth)); k++ {
 		addrs.set(adrHeight, k)
 		addrs.set(adrIndex, idx>>1)
 		if idx&0x1 == 0 {
-			randHash(node0, sig.auth[k], pk.prf, addrs, node0)
+			randHash(node0, body.auth[k], prf, addrs, node0)
 		} else {
-			randHash(sig.auth[k], node0, pk.prf, addrs, node0)
+			randHash(body.auth[k], node0, prf, addrs, node0)
 		}
 		idx >>= 1
 	}
-	return bytes.Equal(pk.root, node0)
+	return node0
 }

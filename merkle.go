@@ -93,12 +93,16 @@ type Stack struct {
 	stack  []*NH
 	height uint32
 	leaf   uint32
+	layer  uint32
+	tree   uint64
 }
 
 type stack struct {
 	Stack  []*NH
 	Height uint32
 	Leaf   uint32
+	Layer  uint32
+	Tree   uint64
 }
 
 func (s *Stack) exports() *stack {
@@ -106,6 +110,8 @@ func (s *Stack) exports() *stack {
 		Stack:  s.stack,
 		Height: s.height,
 		Leaf:   s.leaf,
+		Layer:  s.layer,
+		Tree:   s.tree,
 	}
 }
 
@@ -113,6 +119,8 @@ func (s *Stack) imports(sr *stack) {
 	s.stack = sr.Stack
 	s.height = sr.Height
 	s.leaf = sr.Leaf
+	s.layer = sr.Layer
+	s.tree = sr.Tree
 }
 
 //MarshalJSON  marshals Stack into valid JSON.
@@ -178,6 +186,8 @@ func (s *Stack) newleaf(priv *PrivKey, isGo bool) {
 	addrs := make(addr, 32)
 
 	// addrs.set(adrType, 0)
+	addrs.set(adrLayer, s.layer)
+	addrs.setTree(s.tree)
 	addrs.set(adrOTS, s.leaf)
 	priv.newWotsPrivKey(addrs, sk)
 	if isGo {
@@ -216,6 +226,8 @@ func (s *Stack) updateSub(nn uint64, priv *PrivKey, newleaf func()) {
 	}
 	addrs := make(addr, 32)
 	addrs.set(adrType, 2)
+	addrs.set(adrLayer, s.layer)
+	addrs.setTree(s.tree)
 	for i := uint64(0); i < nn; i++ {
 		if len(s.stack) >= 2 {
 			right := s.top()
@@ -261,6 +273,8 @@ type Merkle struct {
 	stacks []*Stack
 	auth   [][]byte
 	priv   *PrivKey
+	layer  uint32
+	tree   uint64
 }
 
 //NewMerkle makes Merkle struct from height and private seed.
@@ -280,9 +294,9 @@ func NewMerkle(h uint32, seed []byte) *Merkle {
 		panic(err)
 	}
 	pubSeed := mac.Sum(nil)
-	return newMerkle(h, wotsSeed, msgSeed, pubSeed)
+	return newMerkle(h, wotsSeed, msgSeed, pubSeed, 0, 0)
 }
-func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
+func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte, layer uint32, tree uint64) *Merkle {
 	m := &Merkle{
 		Leaf:   0,
 		Height: h,
@@ -294,6 +308,8 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 			msgPRF:  newPRF(msgSeed),
 			root:    make([]byte, 32),
 		},
+		layer: layer,
+		tree:  tree,
 	}
 
 	var wg sync.WaitGroup
@@ -314,6 +330,8 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 				stack:  make([]*NH, 0, (h-nproc)+1),
 				height: h - nproc,
 				leaf:   (1 << (h - nproc)) * i,
+				layer:  m.layer,
+				tree:   m.tree,
 			}
 			s.update(1<<(h-nproc+1)-1, m.priv)
 			ntop[i-1] = s.top()
@@ -324,6 +342,8 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 		stack:  make([]*NH, 0, h+1),
 		height: h,
 		leaf:   0,
+		layer:  m.layer,
+		tree:   m.tree,
 	}
 	for i := uint32(0); i < h; i++ {
 		if i == h-nproc {
@@ -334,6 +354,8 @@ func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte) *Merkle {
 			stack:  make([]*NH, 0, i+1),
 			height: i,
 			leaf:   1 << i,
+			layer:  m.layer,
+			tree:   m.tree,
 		}
 		m.stacks[i].push(s.top())
 		if i < h-nproc {
@@ -359,6 +381,8 @@ type merkle struct {
 	Auth   [][]byte
 	Priv   *PrivKey
 	Stacks []*Stack
+	Layer  uint32
+	Tree   uint64
 }
 
 func (m *Merkle) exports() *merkle {
@@ -368,6 +392,8 @@ func (m *Merkle) exports() *merkle {
 		Auth:   m.auth,
 		Priv:   m.priv,
 		Stacks: m.stacks,
+		Layer:  m.layer,
+		Tree:   m.tree,
 	}
 }
 
@@ -377,6 +403,8 @@ func (m *Merkle) imports(s *merkle) {
 	m.auth = s.Auth
 	m.priv = s.Priv
 	m.stacks = s.Stacks
+	m.layer = s.Layer
+	m.tree = s.Tree
 }
 
 //MarshalJSON  marshals Merkle into valid JSON.

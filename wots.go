@@ -71,7 +71,7 @@ func (priv wotsPrivKey) newWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
 	}
 }
 
-func goChain(p *prf, addrs addr, fchain func(i int, a addr)) {
+func goChain(addrs addr, fchain func(i int, a addr)) {
 	var wg sync.WaitGroup
 	ncpu := runtime.GOMAXPROCS(-1)
 	nitem := wlen/ncpu + 1
@@ -96,7 +96,7 @@ func goChain(p *prf, addrs addr, fchain func(i int, a addr)) {
 }
 
 func (priv wotsPrivKey) goNewWotsPubKey(p *prf, addrs addr, pubkey wotsPubKey) {
-	goChain(p, addrs, func(i int, a addr) {
+	goChain(addrs, func(i int, a addr) {
 		chain(priv[i], 0, w-1, p, a, pubkey[i])
 	})
 }
@@ -124,11 +124,11 @@ func nchain(in [][]byte, m []byte, p *prf, addrs addr, typee int) [][]byte {
 	}
 	base16(tmp, msg[wlen1:])
 	if typee == toSig {
-		goChain(p, addrs, func(i int, a addr) {
+		goChain(addrs, func(i int, a addr) {
 			chain(in[i], 0, msg[i], p, a, out[i])
 		})
 	} else {
-		goChain(p, addrs, func(i int, a addr) {
+		goChain(addrs, func(i int, a addr) {
 			chain(in[i], msg[i], w-1-msg[i], p, a, out[i])
 		})
 	}

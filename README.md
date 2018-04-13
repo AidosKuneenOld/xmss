@@ -8,10 +8,10 @@ XMSS (eXtended Merkle Signature Scheme)
 
 ## Overview
 
-This library is for creating keys, signing messages and verifing the signature by XMSS in golang.
+This library is for creating keys, signing messages and verifing the signature by XMSS and XMSS^MT in Go.
 
-This code implements XMSS-SHA2_10_256, 
-XMSS-SHA2_16_256, XMSS-SHA2_20_256 described on IRTF draft [XMSS: Extended Hash-Based Signatures](https://datatracker.ietf.org/doc/draft-irtf-cfrg-xmss-hash-based-signatures/) and 
+This code implements `XMSS-SHA2_*_256` and `XMSSMT-SHA2_*/*_256`
+ described on IRTF draft [XMSS: Extended Hash-Based Signatures](https://datatracker.ietf.org/doc/draft-irtf-cfrg-xmss-hash-based-signatures/) and 
 compatible with [XMSS reference code](https://github.com/joostrijneveld/xmss-reference).
 But this code is much faster than the reference code by using [SSE extention](https://github.com/minio/sha256-simd) and block level optimizations in sha256,
 with multi threadings.
@@ -55,6 +55,11 @@ are required to compile.
 	var mmer xmss.Merkle
 	err = msgpack.Unmarshal(mdat, &mmer)
 
+	mt, err := xmss.NewPrivKeyMT(seed, 40, 4)
+	sig := mt.Sign(msg)
+	if !VerifyMT(sig, msg, mt.PublicKey(), 40, 4) {
+		...
+	}
 
 ```
 

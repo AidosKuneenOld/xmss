@@ -45,7 +45,7 @@ func TestXMSS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mer := newMerkle(10, skseed, skprf, pubseed)
+	mer := newMerkle(10, skseed, skprf, pubseed, 0, 0)
 	if hex.EncodeToString(mer.priv.root) != "a959a891573da8633b89e8f21e43eef9fca43a14bd2d71b1cf9ad5706945e752" {
 		t.Error("root of xmss  is incorrect")
 		t.Log(hex.EncodeToString(mer.priv.root))
@@ -64,9 +64,16 @@ func TestXMSS(t *testing.T) {
 	}
 	csig = csig[:len(csig)-len(msg)]
 	if !bytes.Equal(sig, csig) {
+		t.Error(hex.EncodeToString(sig))
 		t.Error("XMSS sig is incorrect")
-		csigstr := bytes2sig(csig)
-		sigstr := bytes2sig(sig)
+		csigstr, err := bytes2sig(csig)
+		if err != nil {
+			t.Error(err)
+		}
+		sigstr, err := bytes2sig(sig)
+		if err != nil {
+			t.Error(err)
+		}
 		if csigstr.idx != sigstr.idx {
 			t.Error("sig idx is incorrect")
 		}

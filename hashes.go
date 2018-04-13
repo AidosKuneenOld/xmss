@@ -32,6 +32,8 @@ var (
 )
 
 const (
+	adrLayer = 0
+	//adrTree  = 4
 	adrType  = 4 + 8
 	adrOTS   = 4 + 8 + 4
 	adrChain = 4 + 8 + 4*2
@@ -47,6 +49,9 @@ type addr []byte
 
 func (o addr) set(typee int, value uint32) {
 	binary.BigEndian.PutUint32(o[typee:], value)
+}
+func (o addr) setTree(value uint64) {
+	binary.BigEndian.PutUint64(o[4:], value)
 }
 
 //key:arbital, m:arbital bytes
