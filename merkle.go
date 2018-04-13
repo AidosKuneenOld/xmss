@@ -438,7 +438,11 @@ func (m *Merkle) DecodeMsgpack(dec *msgpack.Decoder) error {
 
 //PublicKey returns public key (merkle root) of XMSS
 func (m *Merkle) PublicKey() []byte {
-	return m.priv.root
+	key := make([]byte, 1+n+n)
+	key[0] = byte(m.Height)
+	copy(key[1:], m.priv.root)
+	copy(key[1+n:], m.priv.pubPRF.seed)
+	return key
 }
 
 func (m *Merkle) refreshAuth() {

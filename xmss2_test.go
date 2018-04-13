@@ -39,7 +39,7 @@ func TestXMSS2(t *testing.T) {
 	var pre []byte
 	for i := 0; i < 1<<10; i++ {
 		sig := mer.Sign(msg)
-		if !Verify(sig, msg, mer.priv.root) {
+		if !Verify(sig, msg, mer.PublicKey()) {
 			t.Error("XMSS sig is incorrect")
 		}
 		if pre != nil && bytes.Equal(pre, sig) {
@@ -58,7 +58,7 @@ func TestXMSS3(t *testing.T) {
 	msg := []byte("This is a test for XMSS.")
 	sig := mer.Sign(msg)
 	msg[0] = 0
-	if Verify(sig, msg, mer.priv.root) {
+	if Verify(sig, msg, mer.PublicKey()) {
 		t.Error("XMSS sig is incorrect")
 	}
 	runtime.GOMAXPROCS(npref)
@@ -70,11 +70,11 @@ func TestXMSS4(t *testing.T) {
 	mer := NewMerkle(2, seed)
 	msg := []byte("This is a test for XMSS.")
 	sig := mer.Sign(msg)
-	if !Verify(sig, msg, mer.priv.root) {
+	if !Verify(sig, msg, mer.PublicKey()) {
 		t.Error("XMSS sig is incorrect")
 	}
 	msg[0] = 0
-	if Verify(sig, msg, mer.priv.root) {
+	if Verify(sig, msg, mer.PublicKey()) {
 		t.Error("XMSS sig is incorrect")
 	}
 	runtime.GOMAXPROCS(npref)
@@ -86,7 +86,7 @@ func TestXMSS16(t *testing.T) {
 	mer := NewMerkle(16, seed)
 	msg := []byte("This is a test for XMSS height=16.")
 	sig := mer.Sign(msg)
-	if !Verify(sig, msg, mer.priv.root) {
+	if !Verify(sig, msg, mer.PublicKey()) {
 		t.Error("XMSS sig is incorrect")
 	}
 	runtime.GOMAXPROCS(npref)
@@ -178,7 +178,7 @@ func BenchmarkXMSS16Veri(b *testing.B) {
 	sig := mer.Sign(msg)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Verify(sig, msg, mer.priv.root)
+		Verify(sig, msg, mer.PublicKey())
 	}
 	runtime.GOMAXPROCS(npref)
 }
@@ -223,7 +223,7 @@ func BenchmarkXMSS10Veri(b *testing.B) {
 	sig := mer.Sign(msg)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Verify(sig, msg, mer.priv.root)
+		Verify(sig, msg, mer.PublicKey())
 	}
 	runtime.GOMAXPROCS(npref)
 }

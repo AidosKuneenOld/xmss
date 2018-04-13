@@ -43,7 +43,7 @@ func TestXMSSMT(t *testing.T) {
 	var pre []byte
 	for i := 0; i < 100; i++ {
 		sig := mer.Sign(msg)
-		if !VerifyMT(sig, msg, mer.PublicKey(), 40, 4) {
+		if !VerifyMT(sig, msg, mer.PublicKey()) {
 			t.Error("XMSS^MT sig is incorrect")
 		}
 		if pre != nil && bytes.Equal(pre, sig) {
@@ -54,7 +54,7 @@ func TestXMSSMT(t *testing.T) {
 	mer.index = 1<<32 + 223
 	for i := 0; i < 100; i++ {
 		sig := mer.Sign(msg)
-		if !VerifyMT(sig, msg, mer.PublicKey(), 40, 4) {
+		if !VerifyMT(sig, msg, mer.PublicKey()) {
 			t.Error("XMSS^MT sig is incorrect")
 		}
 		if pre != nil && bytes.Equal(pre, sig) {
@@ -73,7 +73,7 @@ func TestXMSSMT2(t *testing.T) {
 	wotsSeedS := "7f392beb684110f1ee3f1ab105dd7c48bdaefc9440d276123995c98d3fe220a5"
 	msgSeedS := "660f4e90378019d8463a5466e18f8f787719a1898650ffa23796b13f8414f5c9"
 	pubkeyS := "eefabe301324f03808f2cde73c5e8b7a2673e2345d82b59f47eb1af91e92f162"
-	sigS := "0000000000000000" + pubSeedS +
+	sigS := "0000000000000000" +
 		"512b1cac03116f10136e898baad56e20015a961eb93bf54" +
 		"e2c481ba9a5f7684a0b99de34dd62a40e902ab2b65669b0c160f3af3479c9c8d" +
 		"dccf09be4190c2af8ed1ae6619f2e5c5e54c85aad58a4a7f146105146dcfd920" +
@@ -385,7 +385,7 @@ func TestXMSSMT2(t *testing.T) {
 		"d29674ec4886eeaf5ecb8b5ebb7d3fc07783535bc274afcdaec12b2fdd781b85" +
 		"7ec5df1c1d38a0a53"
 
-	sig2S := "000000020000007b" + pubSeedS +
+	sig2S := "000000020000007b" +
 		"223d06d23e1999f5505a412095ef9907771486a679f1151" +
 		"125ece1de56093ba275644d092d5b419ababf1175b3a5e92c10dae651369a46e" +
 		"ef0bcf12b02a0fee7b0ae192d9f015b5d91e5e5bfdb5af959aed6837f74588bc" +
@@ -726,7 +726,7 @@ func TestXMSSMT2(t *testing.T) {
 		t.Error(err)
 	}
 	mer.merkle[3] = newMerkle(10, wotsSeed, msgSeed, pubSeed, 3, 0)
-	if !bytes.Equal(pubkey, mer.PublicKey()) {
+	if !bytes.Equal(pubkey, mer.merkle[3].priv.root) {
 		t.Error("should be equal")
 	}
 	msg := []byte("This is a test for XMSS.")
@@ -734,8 +734,14 @@ func TestXMSSMT2(t *testing.T) {
 	sig := mer.Sign(msg)
 	if !bytes.Equal(sig, csig) {
 		t.Error("should be equal", hex.EncodeToString(sig))
+		t.Error(hex.EncodeToString(csig))
 	}
-	if !VerifyMT(sig, msg, mer.PublicKey(), 40, 4) {
+	for i := range sig {
+		if sig[i] != csig[i] {
+			t.Log(i)
+		}
+	}
+	if !VerifyMT(sig, msg, mer.PublicKey()) {
 		t.Error("XMSS^MT sig is incorrect")
 	}
 	mer.index = 1<<33 + 123
@@ -743,7 +749,7 @@ func TestXMSSMT2(t *testing.T) {
 	if !bytes.Equal(sig, csig2) {
 		t.Error("should be equal", hex.EncodeToString(sig))
 	}
-	if !VerifyMT(sig, msg, mer.PublicKey(), 40, 4) {
+	if !VerifyMT(sig, msg, mer.PublicKey()) {
 		t.Error("XMSS^MT sig is incorrect")
 	}
 	runtime.GOMAXPROCS(npref)

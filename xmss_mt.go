@@ -70,12 +70,17 @@ func NewPrivKeyMT(seed []byte, h, d uint32) (*PrivKeyMT, error) {
 
 //PublicKey returns public key (merkle root) of XMSS^MT
 func (p *PrivKeyMT) PublicKey() []byte {
-	return p.merkle[p.d-1].priv.root
+	priv := p.merkle[p.d-1].priv
+	key := make([]byte, 1+n+n)
+	key[0] = (byte(p.h / 20)) << 4
+	key[0] |= byte(p.d)
+	copy(key[1:], priv.root)
+	copy(key[1+n:], priv.pubPRF.seed)
+	return key
 }
 
 type xmssMTSig struct {
 	idx  uint64
-	seed []byte
 	r    []byte
 	sigs []*xmssSigBody
 }
@@ -84,31 +89,29 @@ func (x *xmssMTSig) bytes() []byte {
 	d := len(x.sigs)
 	h := len(x.sigs[0].auth) * d
 	bytesPerLayer := (wlen + h/d) * n
-	sigSize := 8 + n + n + (wlen+h/d)*n*d
+	sigSize := 8 + n + (wlen+h/d)*n*d
 	sig := make([]byte, sigSize)
 	binary.BigEndian.PutUint64(sig, x.idx)
-	copy(sig[8:], x.seed)
-	copy(sig[8+n:], x.r)
+	copy(sig[8:], x.r)
 	for i, body := range x.sigs {
-		copy(sig[8+n+n+bytesPerLayer*i:], body.bytes())
+		copy(sig[8+n+bytesPerLayer*i:], body.bytes())
 	}
 	return sig
 }
 
 func bytes2MTsig(b []byte, d, h uint32) (*xmssMTSig, error) {
 	bytesPerLayer := (wlen + h/d) * n
-	sigSize := 8 + n + n + bytesPerLayer*d
+	sigSize := 8 + n + bytesPerLayer*d
 	if uint32(len(b)) != sigSize {
 		return nil, errors.New("invalid length of bytes")
 	}
 	sig := &xmssMTSig{
 		idx:  binary.BigEndian.Uint64(b),
-		seed: b[8 : 8+n],
-		r:    b[8+n : 8+n+n],
+		r:    b[8 : 8+n],
 		sigs: make([]*xmssSigBody, d),
 	}
 	for i := range sig.sigs {
-		start := 8 + n + n + uint32(i)*bytesPerLayer
+		start := 8 + n + uint32(i)*bytesPerLayer
 		sig.sigs[i] = bytes2sigBody(b[start:start+bytesPerLayer], int(h/d))
 	}
 	return sig, nil
@@ -126,7 +129,6 @@ func (p *PrivKeyMT) Sign(msg []byte) []byte {
 	hmsg := hashMsg(r, msg)
 	sig := &xmssMTSig{
 		idx:  p.index,
-		seed: mpriv.pubPRF.seed,
 		r:    r[:32],
 		sigs: make([]*xmssSigBody, p.d),
 	}
@@ -140,7 +142,7 @@ func (p *PrivKeyMT) Sign(msg []byte) []byte {
 		p.merkle[0].Traverse()
 	}
 	sig.sigs[0] = p.merkle[0].sign(hmsg)
-	root := p.merkle[0].PublicKey()
+	root := p.merkle[0].priv.root
 
 	for j := uint32(1); j < p.d; j++ {
 		idxLeaf := uint32(idxTree & mask)
@@ -152,7 +154,7 @@ func (p *PrivKeyMT) Sign(msg []byte) []byte {
 			p.merkle[j].Traverse()
 		}
 		sig.sigs[j] = p.merkle[j].sign(root)
-		root = p.merkle[j].PublicKey()
+		root = p.merkle[j].priv.root
 	}
 
 	p.index++
@@ -160,17 +162,23 @@ func (p *PrivKeyMT) Sign(msg []byte) []byte {
 }
 
 //VerifyMT verifies msg by XMSS^MT.
-func VerifyMT(bsig, msg, bpk []byte, h, d uint32) bool {
+func VerifyMT(bsig, msg, bpk []byte) bool {
+	pkRoot := bpk[1 : 1+n]
+	seed := bpk[1+n : 1+n+n]
+	h := uint32(bpk[0] & 0xf0)
+	h = (h >> 4) * 20
+	d := uint32(bpk[0] & 0x0f)
+
 	sig, err := bytes2MTsig(bsig, d, h)
 	if err != nil {
 		return false
 	}
 	r := make([]byte, 32*3)
 	copy(r, sig.r)
-	copy(r[32:], bpk)
+	copy(r[32:], pkRoot)
 	binary.BigEndian.PutUint64(r[64+24:], sig.idx)
 	hmsg := hashMsg(r, msg)
-	prf := newPRF(sig.seed)
+	prf := newPRF(seed)
 
 	mask := uint64((1 << (h / d)) - 1)
 	idxTree := sig.idx >> (h / d)
@@ -182,7 +190,7 @@ func VerifyMT(bsig, msg, bpk []byte, h, d uint32) bool {
 		idxTree = idxTree >> (h / d)
 		node = rootFromSig(idxLeaf, node, sig.sigs[j], prf, j, idxTree)
 	}
-	return bytes.Equal(bpk, node)
+	return bytes.Equal(pkRoot, node)
 }
 
 type privKeyMT struct {

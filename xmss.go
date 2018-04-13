@@ -140,20 +140,18 @@ type xmssSigBody struct {
 }
 
 type xmssSig struct {
-	idx  uint32
-	seed []byte
-	r    []byte
+	idx uint32
+	r   []byte
 	*xmssSigBody
 }
 
 func (x *xmssSig) bytes() []byte {
-	sigSize := 4 + n + n + wlen*n + len(x.auth)*n
+	sigSize := 4 + n + wlen*n + len(x.auth)*n
 	sig := make([]byte, sigSize)
 	binary.BigEndian.PutUint32(sig, x.idx)
-	copy(sig[4:], x.seed)
-	copy(sig[4+n:], x.r)
+	copy(sig[4:], x.r)
 	sigBody := x.xmssSigBody.bytes()
-	copy(sig[4+n+n:], sigBody)
+	copy(sig[4+n:], sigBody)
 	return sig
 }
 
@@ -169,16 +167,15 @@ func (x *xmssSigBody) bytes() []byte {
 	return sig
 }
 
-func bytes2sig(b []byte) (*xmssSig, error) {
-	height := (len(b) - (4 + n + n + wlen*n)) >> 5
-	if height <= 0 {
+func bytes2sig(b []byte, h byte) (*xmssSig, error) {
+	height := (len(b) - (4 + n + wlen*n)) >> 5
+	if height != int(h) {
 		return nil, errors.New("invalid length of bytes")
 	}
-	body := bytes2sigBody(b[4+n+n:], height)
+	body := bytes2sigBody(b[4+n:], height)
 	sig := &xmssSig{
 		idx:         binary.BigEndian.Uint32(b),
-		seed:        b[4 : 4+n],
-		r:           b[4+n : 4+n+n],
+		r:           b[4 : 4+n],
 		xmssSigBody: body,
 	}
 	return sig, nil
@@ -210,7 +207,6 @@ func (m *Merkle) Sign(msg []byte) []byte {
 	sigBody := m.sign(hmsg)
 	sig := &xmssSig{
 		idx:         m.Leaf,
-		seed:        m.priv.pubPRF.seed,
 		r:           r[:32],
 		xmssSigBody: sigBody,
 	}
@@ -238,18 +234,20 @@ func (m *Merkle) sign(hmsg []byte) *xmssSigBody {
 
 //Verify verifies msg by XMSS.
 func Verify(bsig, msg, bpk []byte) bool {
-	sig, err := bytes2sig(bsig)
+	pkRoot := bpk[1 : 1+n]
+	seed := bpk[1+n : 1+n+n]
+	sig, err := bytes2sig(bsig, bpk[0])
 	if err != nil {
 		return false
 	}
-	prf := newPRF(sig.seed)
+	prf := newPRF(seed)
 	r := make([]byte, 32*3)
 	copy(r, sig.r)
-	copy(r[32:], bpk)
+	copy(r[32:], pkRoot)
 	binary.BigEndian.PutUint32(r[64+28:], sig.idx)
 	hmsg := hashMsg(r, msg)
 	root := rootFromSig(sig.idx, hmsg, sig.xmssSigBody, prf, 0, 0)
-	return bytes.Equal(root, bpk)
+	return bytes.Equal(root, pkRoot)
 }
 
 func rootFromSig(idx uint32, hmsg []byte, body *xmssSigBody, prf *prf, layer uint32, tree uint64) []byte {
