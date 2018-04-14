@@ -260,6 +260,14 @@ func (m *Merkle) sign(hmsg []byte) *xmssSigBody {
 	}
 }
 
+//IndexFromSig returns index of merkle from the signature bsig.
+func IndexFromSig(bsig []byte) (uint32, error) {
+	if len(bsig) < 4 {
+		return 0, errors.New("invalid signature length")
+	}
+	return binary.BigEndian.Uint32(bsig), nil
+}
+
 //Verify verifies msg by XMSS.
 func Verify(bsig, msg, bpk []byte) bool {
 	pk, err := DeserializePK(bpk)

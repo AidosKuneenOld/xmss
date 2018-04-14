@@ -68,6 +68,20 @@ func NewPrivKeyMT(seed []byte, h, d uint32) (*PrivKeyMT, error) {
 	return &p, nil
 }
 
+//LeafNo returns the leaf no in xmss^mt.
+func (p *PrivKeyMT) LeafNo() uint64 {
+	return p.index
+}
+
+//SetLeafNo sets the leaf no in merkle and refresh authes..
+func (p *PrivKeyMT) SetLeafNo(n uint64) error {
+	if p.index < n {
+		return errors.New("should not set past index")
+	}
+	p.index = n
+	return nil
+}
+
 //PublicKey returns public key (merkle root) of XMSS^MT
 func (p *PrivKeyMT) PublicKey() []byte {
 	priv := p.merkle[p.d-1].priv
@@ -169,13 +183,26 @@ type PublicKeyMT struct {
 	Seed []byte
 }
 
+//PublickeyMTHeader returns first 1 byte of public key of XMSS^MT
+func PublickeyMTHeader(h, d uint32) (byte, error) {
+	if h%d != 0 || h%20 != 0 || h == 0 || d == 0 ||
+		h/20 > 15 || d > 15 {
+		return 0, errors.New("invalid h or d")
+	}
+	var header byte
+	header = byte(h) / 20
+	header = (header << 4) | byte(d)
+	return header, nil
+}
+
 //Serialize returns serialized bytes of XMSS^MT PublicKey.
 func (p *PublicKeyMT) Serialize() ([]byte, error) {
-	if p.H%p.D != 0 || p.H%20 != 0 || p.H == 0 || p.D == 0 ||
-		p.H/20 > 15 || p.D > 15 {
+	var err error
+	key := make([]byte, 1+n+n)
+	key[0], err = PublickeyMTHeader(p.H, p.D)
+	if err != nil {
 		return nil, errors.New("invalid h or d")
 	}
-	key := make([]byte, 1+n+n)
 	key[0] = byte(p.H) / 20
 	key[0] = (key[0] << 4) | byte(p.D)
 	copy(key[1:], p.Root)

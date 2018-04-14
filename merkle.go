@@ -23,6 +23,7 @@ package xmss
 import (
 	"crypto/hmac"
 	"encoding/json"
+	"errors"
 	"math"
 	"runtime"
 	"sync"
@@ -434,6 +435,22 @@ func (m *Merkle) DecodeMsgpack(dec *msgpack.Decoder) error {
 		m.imports(&s)
 	}
 	return err
+}
+
+//LeafNo returns the leaf no in merkle.
+func (m *Merkle) LeafNo() uint64 {
+	return uint64(m.Leaf)
+}
+
+//SetLeafNo sets the leaf no in merkle and refresh authes..
+func (m *Merkle) SetLeafNo(n uint64) error {
+	if m.Leaf < uint32(n) {
+		return errors.New("should not set past index")
+	}
+	for m.Leaf < uint32(n) {
+		m.Traverse()
+	}
+	return nil
 }
 
 //PublicKey returns public key (merkle root) of XMSS
