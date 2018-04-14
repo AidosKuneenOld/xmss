@@ -161,36 +161,72 @@ func (p *PrivKeyMT) Sign(msg []byte) []byte {
 	return sig.bytes()
 }
 
+//PublicKeyMT for xmss^MT
+type PublicKeyMT struct {
+	H    uint32
+	D    uint32
+	Root []byte
+	Seed []byte
+}
+
+//Serialize returns serialized bytes of XMSS^MT PublicKey.
+func (p *PublicKeyMT) Serialize() ([]byte, error) {
+	if p.H%p.D != 0 || p.H%20 != 0 || p.H == 0 || p.D == 0 ||
+		p.H/20 > 15 || p.D > 15 {
+		return nil, errors.New("invalid h or d")
+	}
+	key := make([]byte, 1+n+n)
+	key[0] = byte(p.H) / 20
+	key[0] = (key[0] << 4) | byte(p.D)
+	copy(key[1:], p.Root)
+	copy(key[1+n:], p.Seed)
+	return key, nil
+}
+
+//DeserializeMT deserialized bytes to XMSS^MT PublicKey.
+func DeserializeMT(key []byte) (*PublicKeyMT, error) {
+	if len(key) != 65 {
+		return nil, errors.New("invalid bytes length")
+	}
+	h := uint32(key[0] & 0xf0)
+	h = (h >> 4) * 20
+	d := uint32(key[0] & 0x0f)
+	return &PublicKeyMT{
+		H:    h,
+		D:    d,
+		Root: key[1:33],
+		Seed: key[33:65],
+	}, nil
+}
+
 //VerifyMT verifies msg by XMSS^MT.
 func VerifyMT(bsig, msg, bpk []byte) bool {
-	pkRoot := bpk[1 : 1+n]
-	seed := bpk[1+n : 1+n+n]
-	h := uint32(bpk[0] & 0xf0)
-	h = (h >> 4) * 20
-	d := uint32(bpk[0] & 0x0f)
-
-	sig, err := bytes2MTsig(bsig, d, h)
+	pk, err := DeserializeMT(bpk)
+	if err != nil {
+		return false
+	}
+	sig, err := bytes2MTsig(bsig, pk.D, pk.H)
 	if err != nil {
 		return false
 	}
 	r := make([]byte, 32*3)
 	copy(r, sig.r)
-	copy(r[32:], pkRoot)
+	copy(r[32:], pk.Root)
 	binary.BigEndian.PutUint64(r[64+24:], sig.idx)
 	hmsg := hashMsg(r, msg)
-	prf := newPRF(seed)
+	prf := newPRF(pk.Seed)
 
-	mask := uint64((1 << (h / d)) - 1)
-	idxTree := sig.idx >> (h / d)
+	mask := uint64((1 << (pk.H / pk.D)) - 1)
+	idxTree := sig.idx >> (pk.H / pk.D)
 	idxLeaf := uint32(sig.idx & mask)
 	node := rootFromSig(idxLeaf, hmsg, sig.sigs[0], prf, 0, idxTree)
 
-	for j := uint32(1); j < d; j++ {
+	for j := uint32(1); j < pk.D; j++ {
 		idxLeaf := uint32(idxTree & mask)
-		idxTree = idxTree >> (h / d)
+		idxTree = idxTree >> (pk.H / pk.D)
 		node = rootFromSig(idxLeaf, node, sig.sigs[j], prf, j, idxTree)
 	}
-	return bytes.Equal(pkRoot, node)
+	return bytes.Equal(pk.Root, node)
 }
 
 type privKeyMT struct {

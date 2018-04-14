@@ -97,6 +97,34 @@ func (x *PrivKey) newWotsPrivKey(addrs addr, priv wotsPrivKey) {
 	}
 }
 
+//PublicKey for xmss
+type PublicKey struct {
+	Height byte
+	Root   []byte
+	Seed   []byte
+}
+
+//Serialize returns serialized bytes of XMSS PublicKey.
+func (p *PublicKey) Serialize() []byte {
+	key := make([]byte, 1+n+n)
+	key[0] = p.Height
+	copy(key[1:], p.Root)
+	copy(key[1+n:], p.Seed)
+	return key
+}
+
+//DeserializePK deserialized bytes to XMSS PublicKey.
+func DeserializePK(key []byte) (*PublicKey, error) {
+	if len(key) != 65 {
+		return nil, errors.New("invalid bytes length")
+	}
+	return &PublicKey{
+		Height: key[0],
+		Root:   key[1:33],
+		Seed:   key[33:65],
+	}, nil
+}
+
 func randHash(left, right []byte, p *prf, addrs addr, out []byte) {
 	addrs.set(adrKM, 0)
 	key := make([]byte, 32)
@@ -234,20 +262,22 @@ func (m *Merkle) sign(hmsg []byte) *xmssSigBody {
 
 //Verify verifies msg by XMSS.
 func Verify(bsig, msg, bpk []byte) bool {
-	pkRoot := bpk[1 : 1+n]
-	seed := bpk[1+n : 1+n+n]
-	sig, err := bytes2sig(bsig, bpk[0])
+	pk, err := DeserializePK(bpk)
 	if err != nil {
 		return false
 	}
-	prf := newPRF(seed)
+	sig, err := bytes2sig(bsig, pk.Height)
+	if err != nil {
+		return false
+	}
+	prf := newPRF(pk.Seed)
 	r := make([]byte, 32*3)
 	copy(r, sig.r)
-	copy(r[32:], pkRoot)
+	copy(r[32:], pk.Root)
 	binary.BigEndian.PutUint32(r[64+28:], sig.idx)
 	hmsg := hashMsg(r, msg)
 	root := rootFromSig(sig.idx, hmsg, sig.xmssSigBody, prf, 0, 0)
-	return bytes.Equal(root, pkRoot)
+	return bytes.Equal(root, pk.Root)
 }
 
 func rootFromSig(idx uint32, hmsg []byte, body *xmssSigBody, prf *prf, layer uint32, tree uint64) []byte {
