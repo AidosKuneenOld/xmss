@@ -278,7 +278,7 @@ type Merkle struct {
 }
 
 //NewMerkle makes Merkle struct from height and private seed.
-func NewMerkle(h uint32, seed []byte) *Merkle {
+func NewMerkle(h byte, seed []byte) *Merkle {
 	mac := hmac.New(sha256.New, seed)
 	if _, err := mac.Write([]byte{1}); err != nil {
 		panic(err)
@@ -294,7 +294,7 @@ func NewMerkle(h uint32, seed []byte) *Merkle {
 		panic(err)
 	}
 	pubSeed := mac.Sum(nil)
-	return newMerkle(h, wotsSeed, msgSeed, pubSeed, 0, 0)
+	return newMerkle(uint32(h), wotsSeed, msgSeed, pubSeed, 0, 0)
 }
 func newMerkle(h uint32, wotsSeed, msgSeed, pubSeed []byte, layer uint32, tree uint64) *Merkle {
 	m := &Merkle{

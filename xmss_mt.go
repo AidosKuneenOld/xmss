@@ -41,7 +41,7 @@ type PrivKeyMT struct {
 
 //NewPrivKeyMT returns XMSS^MT private key.
 func NewPrivKeyMT(seed []byte, h, d uint32) (*PrivKeyMT, error) {
-	if h%d != 0 {
+	if h%d != 0 || h%20 != 0 || h == 0 || d == 0 || h/20 > 15 || d > 15 {
 		return nil, errors.New("invalid h or d")
 	}
 	p := PrivKeyMT{
