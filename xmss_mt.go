@@ -189,8 +189,7 @@ func PublickeyMTHeader(h, d uint32) (byte, error) {
 		h/20 > 15 || d > 15 {
 		return 0, errors.New("invalid h or d")
 	}
-	var header byte
-	header = byte(h) / 20
+	header := byte(h) / 20
 	header = (header << 4) | byte(d)
 	return header, nil
 }

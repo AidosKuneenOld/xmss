@@ -11,7 +11,7 @@ XMSS (eXtended Merkle Signature Scheme)
 This library is for creating keys, signing messages and verifing the signature by XMSS and XMSS^MT in Go.
 
 This code implements `XMSS-SHA2_*_256` and `XMSSMT-SHA2_*/*_256`
- described on IRTF draft [XMSS: Extended Hash-Based Signatures](https://datatracker.ietf.org/doc/draft-irtf-cfrg-xmss-hash-based-signatures/).
+ described on  [XMSS: eXtended Merkle Signature Scheme (RFC 8391)](https://datatracker.ietf.org/doc/rfc8391/).
  This code should be much faster than the [XMSS reference code](https://github.com/joostrijneveld/xmss-reference).
  by using [SSE extention](https://github.com/minio/sha256-simd) and block level optimizations in SHA256 with multi threadings.
 
