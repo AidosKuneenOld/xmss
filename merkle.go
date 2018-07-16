@@ -444,8 +444,8 @@ func (m *Merkle) LeafNo() uint64 {
 
 //SetLeafNo sets the leaf no in merkle and refresh authes..
 func (m *Merkle) SetLeafNo(n uint64) error {
-	if m.Leaf < uint32(n) {
-		return errors.New("should not set past index")
+	if m.Leaf > uint32(n) {
+		return errors.New("must not set past index")
 	}
 	for m.Leaf < uint32(n) {
 		m.Traverse()
