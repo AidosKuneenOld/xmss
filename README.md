@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/AidosKuneen/xmss.svg?branch=master)](https://travis-ci.org/AidosKuneen/xmss)
 [![GoDoc](https://godoc.org/github.com/AidosKuneen/xmss?status.svg)](https://godoc.org/github.com/AidosKuneen/xmss)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/AidosKuneen/xmss/master/LICENSE)
-
+[![Coverage Status](https://coveralls.io/repos/github/AidosKuneen/xmss/badge.svg?branch=master)](https://coveralls.io/github/AidosKuneen/xmss?branch=master)
 
 XMSS (eXtended Merkle Signature Scheme)
 =====
