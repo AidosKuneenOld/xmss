@@ -157,3 +157,12 @@ BenchmarkXMSS16Sign-16    	     300	   5364563 ns/op
 BenchmarkXMSS16Veri-16    	    3000	    419544 ns/op
 BenchmarkXMSS20-16        	       1  187203367087 ns/op
 ```
+
+# Dependencies and Licenses
+
+This software includes the work that is distributed in the Apache License 2.0.
+
+github.com/AidosKuneen/xmss           MIT License 
+github.com/AidosKuneen/sha256-simd    Apache License 2.0
+github.com/vmihailenco/msgpack/codes  BSD 2-clause "Simplified" License
+Golang Standard Library               BSD 3-clause License
