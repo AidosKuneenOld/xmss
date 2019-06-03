@@ -21,7 +21,7 @@
 package xmss
 
 import (
-	"bytes"
+	"crypto/subtle"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -285,7 +285,7 @@ func Verify(bsig, msg, bpk []byte) bool {
 	binary.BigEndian.PutUint32(r[64+28:], sig.idx)
 	hmsg := hashMsg(r, msg)
 	root := rootFromSig(sig.idx, hmsg, sig.xmssSigBody, prf, 0, 0)
-	return bytes.Equal(root, pk.Root)
+	return subtle.ConstantTimeCompare(root, pk.Root) == 1
 }
 
 func rootFromSig(idx uint32, hmsg []byte, body *xmssSigBody, prf *prf, layer uint32, tree uint64) []byte {

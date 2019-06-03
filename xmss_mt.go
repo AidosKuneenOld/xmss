@@ -21,7 +21,7 @@
 package xmss
 
 import (
-	"bytes"
+	"crypto/subtle"
 	"crypto/hmac"
 	"encoding/binary"
 	"encoding/json"
@@ -252,7 +252,7 @@ func VerifyMT(bsig, msg, bpk []byte) bool {
 		idxTree = idxTree >> (pk.H / pk.D)
 		node = rootFromSig(idxLeaf, node, sig.sigs[j], prf, j, idxTree)
 	}
-	return bytes.Equal(pk.Root, node)
+	return subtle.ConstantTimeCompare(pk.Root, node) == 1
 }
 
 type privKeyMT struct {
